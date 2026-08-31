@@ -64,36 +64,44 @@ async function main() {
   });
   console.log(`[Seed] Admin User created: ${adminUser.email}`);
 
+  // Clean up legacy/dummy blocks, rooms, and hostels
+  await prisma.allocation.deleteMany({});
+  await prisma.bed.deleteMany({});
+  await prisma.room.deleteMany({});
+  await prisma.floor.deleteMany({});
+  await prisma.block.deleteMany({});
+  await prisma.hostel.deleteMany({});
+
   // 4. Create MIT Institutional Hostels & Blocks Structure
   const boysHostels = [
-    { name: 'Orchid International', code: 'ORCHID', desc: 'Air-Conditioned & International Scholars Boys Residence' },
-    { name: 'Birla', code: 'BIRLA', desc: 'Senior Engineering Undergraduate Boys Residence' },
-    { name: 'Bhavani', code: 'BHAVANI', desc: 'Central Campus Undergraduate Boys Residence' },
-    { name: 'Kurinji', code: 'KURINJI', desc: 'Hillside Modern Block Boys Residence' },
-    { name: 'Marudham', code: 'MARUDHAM', desc: 'Eco-Green Campus Boys Residence' },
-    { name: 'Thamira Bhavani', code: 'THAMIRA', desc: 'Premier Academic Block Boys Residence' },
-    { name: 'Amaravathi', code: 'AMARAVATHI', desc: 'First Year Engineering Boys Residence' },
+    { name: 'Orchid International', code: 'ORCHID' },
+    { name: 'Birla', code: 'BIRLA' },
+    { name: 'Bhavani', code: 'BHAVANI' },
+    { name: 'Kurinji', code: 'KURINJI' },
+    { name: 'Marudham', code: 'MARUDHAM' },
+    { name: 'Thamira Bhavani', code: 'THAMIRA' },
+    { name: 'Amaravathi', code: 'AMARAVATHI' },
   ];
 
   const girlsHostels = [
-    { name: 'Rajam NRI', code: 'RAJAM_NRI', desc: 'Premier Air-Conditioned & NRI Scholars Girls Residence' },
-    { name: 'Ponni', code: 'PONNI', desc: 'Undergraduate Engineering Girls Residence' },
-    { name: 'Kaveri', code: 'KAVERI', desc: 'Senior Scholar & Post-Graduate Girls Residence' },
-    { name: 'Vaigai', code: 'VAIGAI', desc: 'Garden View Engineering Girls Residence' },
+    { name: 'Rajam NRI', code: 'RAJAM_NRI' },
+    { name: 'Ponni', code: 'PONNI' },
+    { name: 'Kaveri', code: 'KAVERI' },
+    { name: 'Vaigai', code: 'VAIGAI' },
   ];
 
   // Seed Boys Hostels & Blocks
   for (const bh of boysHostels) {
     const h = await prisma.hostel.upsert({
       where: { code: bh.code },
-      update: { name: `${bh.name} (Boys Hostel)`, gender: 'MALE', description: bh.desc },
-      create: { name: `${bh.name} (Boys Hostel)`, code: bh.code, gender: 'MALE', description: bh.desc },
+      update: { name: bh.name, gender: 'MALE' },
+      create: { name: bh.name, code: bh.code, gender: 'MALE' },
     });
 
     const blk = await prisma.block.upsert({
       where: { hostelId_code: { hostelId: h.id, code: `BLK-${bh.code}` } },
-      update: { name: `${bh.name} - Boys Block`, gender: 'MALE' },
-      create: { hostelId: h.id, name: `${bh.name} - Boys Block`, code: `BLK-${bh.code}`, gender: 'MALE' },
+      update: { name: bh.name, gender: 'MALE' },
+      create: { hostelId: h.id, name: bh.name, code: `BLK-${bh.code}`, gender: 'MALE' },
     });
 
     for (let fNum = 1; fNum <= 3; fNum++) {
@@ -126,37 +134,91 @@ async function main() {
   for (const gh of girlsHostels) {
     const h = await prisma.hostel.upsert({
       where: { code: gh.code },
-      update: { name: `${gh.name} (Girls Hostel)`, gender: 'FEMALE', description: gh.desc },
-      create: { name: `${gh.name} (Girls Hostel)`, code: gh.code, gender: 'FEMALE', description: gh.desc },
+      update: { name: gh.name, gender: 'FEMALE' },
+      create: { name: gh.name, code: gh.code, gender: 'FEMALE' },
     });
 
     const blk = await prisma.block.upsert({
       where: { hostelId_code: { hostelId: h.id, code: `BLK-${gh.code}` } },
-      update: { name: `${gh.name} - Girls Block`, gender: 'FEMALE' },
-      create: { hostelId: h.id, name: `${gh.name} - Girls Block`, code: `BLK-${gh.code}`, gender: 'FEMALE' },
+      update: { name: gh.name, gender: 'FEMALE' },
+      create: { hostelId: h.id, name: gh.name, code: `BLK-${gh.code}`, gender: 'FEMALE' },
     });
 
-    for (let fNum = 1; fNum <= 3; fNum++) {
-      const flr = await prisma.floor.upsert({
-        where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fNum } },
-        update: {},
-        create: { blockId: blk.id, floorNumber: fNum, name: `Floor ${fNum}` },
-      });
+    // Special exact architectural layout for Rajam NRI Hostel
+    if (gh.code === 'RAJAM_NRI') {
+      const floorsConfig = [
+        { floorNum: 1, prefix: '21' },
+        { floorNum: 2, prefix: '22' },
+      ];
 
-      for (let r = 1; r <= 4; r++) {
-        const roomNum = `${gh.code.substring(0, 3)}-${fNum}0${r}`;
-        const room = await prisma.room.upsert({
-          where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
+      for (const fc of floorsConfig) {
+        const flr = await prisma.floor.upsert({
+          where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fc.floorNum } },
           update: {},
-          create: { floorId: flr.id, roomNumber: roomNum, capacity: 2, roomType: 'DOUBLE', status: 'AVAILABLE' },
+          create: { blockId: blk.id, floorNumber: fc.floorNum, name: `Floor ${fc.floorNum}` },
         });
 
-        for (const bLetter of ['A', 'B']) {
-          await prisma.bed.upsert({
-            where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
-            update: {},
-            create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+        // Double Occupancy Rooms: 2101-2111 (Floor 1) and 2201-2211 (Floor 2)
+        for (let num = 1; num <= 11; num++) {
+          const roomSuffix = num < 10 ? `0${num}` : `${num}`;
+          const roomNum = `${fc.prefix}${roomSuffix}`;
+
+          const room = await prisma.room.upsert({
+            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
+            update: { capacity: 2, roomType: 'DOUBLE' },
+            create: { floorId: flr.id, roomNumber: roomNum, capacity: 2, roomType: 'DOUBLE', status: 'AVAILABLE' },
           });
+
+          for (const bLetter of ['A', 'B']) {
+            await prisma.bed.upsert({
+              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
+              update: {},
+              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+            });
+          }
+        }
+
+        // Single Occupancy Rooms: 2112-2121 (Floor 1) and 2212-2221 (Floor 2)
+        for (let num = 12; num <= 21; num++) {
+          const roomNum = `${fc.prefix}${num}`;
+
+          const room = await prisma.room.upsert({
+            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
+            update: { capacity: 1, roomType: 'SINGLE' },
+            create: { floorId: flr.id, roomNumber: roomNum, capacity: 1, roomType: 'SINGLE', status: 'AVAILABLE' },
+          });
+
+          await prisma.bed.upsert({
+            where: { roomId_bedNumber: { roomId: room.id, bedNumber: 'A' } },
+            update: {},
+            create: { roomId: room.id, bedNumber: 'A', status: 'AVAILABLE' },
+          });
+        }
+      }
+    } else {
+      // Standard 3 floors for other girls residences
+      for (let fNum = 1; fNum <= 3; fNum++) {
+        const flr = await prisma.floor.upsert({
+          where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fNum } },
+          update: {},
+          create: { blockId: blk.id, floorNumber: fNum, name: `Floor ${fNum}` },
+        });
+
+        for (let r = 1; r <= 4; r++) {
+          const roomNum = `${gh.code.substring(0, 3)}-${fNum}0${r}`;
+          const room = await prisma.room.upsert({
+            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
+            update: {},
+            create: { floorId: flr.id, roomNumber: roomNum, capacity: 2, roomType: 'DOUBLE', status: 'AVAILABLE' },
+          });
+
+          for (const bLetter of ['A', 'B']) {
+            await prisma.bed.upsert({
+              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
+              update: {},
+              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+            });
+          }
         }
       }
     }
@@ -166,7 +228,7 @@ async function main() {
 
   // 5. Seed Students with different lifecycle stages
 
-  // Student 1: Fully Allocated (Alex Rivera)
+  // Student 1: Fully Allocated (Alex Rivera - 2nd Year CS, Orchid International)
   const user1 = await prisma.user.upsert({
     where: { email: 'alex.rivera@student.dormify.edu' },
     update: {},
@@ -177,9 +239,13 @@ async function main() {
       name: 'Alex Rivera',
       studentProfile: {
         create: {
-          rollNumber: 'STU2026001',
+          rollNumber: '2025503600',
           department: 'Computer Science',
-          hostelType: 'REGULAR_NON_AC',
+          yearOfStudy: 2,
+          preferredHostel: 'ORCHID',
+          totalFeePaid: 124735.0,
+          remainingFeeDue: 0,
+          quota: 'TNEA',
           phone: '+91 98401 23456',
           guardianName: 'Carlos Rivera',
           guardianPhone: '+91 98401 87654',
@@ -208,7 +274,7 @@ async function main() {
       create: {
         applicationId: app1.id,
         receiptNumber: 'REC-2026-001',
-        amount: 45000.0,
+        amount: 124735.0,
         fileUrl: '/uploads/receipts/sample_receipt_1.pdf',
         originalFilename: 'Hostel_Fee_Receipt_2026.pdf',
         mimeType: 'application/pdf',
@@ -240,7 +306,7 @@ async function main() {
     }
   }
 
-  // Student 2: Fee Verified (Priya Sharma)
+  // Student 2: Fee Verified (Priya Sharma - 1st Year, Rajam NRI)
   const user2 = await prisma.user.upsert({
     where: { email: 'priya.sharma@student.dormify.edu' },
     update: {},
@@ -253,7 +319,11 @@ async function main() {
         create: {
           rollNumber: 'STU2026002',
           department: 'Electrical Engineering',
-          hostelType: 'DELUXE_NON_AC',
+          yearOfStudy: 1,
+          preferredHostel: 'RAJAM_NRI',
+          totalFeePaid: 107084.0,
+          remainingFeeDue: 0,
+          quota: 'TNEA',
           phone: '+91 94441 34567',
           guardianName: 'Rajesh Sharma',
           guardianPhone: '+91 94441 98765',
@@ -282,7 +352,7 @@ async function main() {
       create: {
         applicationId: app2.id,
         receiptNumber: 'REC-2026-002',
-        amount: 65000.0,
+        amount: 107084.0,
         fileUrl: '/uploads/receipts/sample_receipt_2.pdf',
         originalFilename: 'Priya_Hostel_Fee.pdf',
         mimeType: 'application/pdf',
@@ -294,7 +364,7 @@ async function main() {
     });
   }
 
-  // Student 3: Fee Submitted (Marcus Vance)
+  // Student 3: Fee Submitted (Marcus Vance - 1st Year, Birla General Hostel)
   const user3 = await prisma.user.upsert({
     where: { email: 'marcus.vance@student.dormify.edu' },
     update: {},
@@ -307,7 +377,11 @@ async function main() {
         create: {
           rollNumber: 'STU2026003',
           department: 'Mechanical Engineering',
-          hostelType: 'AC_SHARED',
+          yearOfStudy: 1,
+          preferredHostel: 'BIRLA',
+          totalFeePaid: 47197.0,
+          remainingFeeDue: 0,
+          quota: 'TNEA',
           phone: '+91 97891 45678',
           guardianName: 'David Vance',
           guardianPhone: '+91 97891 87611',
@@ -336,7 +410,7 @@ async function main() {
       create: {
         applicationId: app3.id,
         receiptNumber: 'REC-2026-003',
-        amount: 85000.0,
+        amount: 47197.0,
         fileUrl: '/uploads/receipts/sample_receipt_3.pdf',
         originalFilename: 'Marcus_Receipt_Copy.pdf',
         mimeType: 'application/pdf',

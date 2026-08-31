@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { Application, getHostelTypeDetails } from '../../types';
+import { Application, getHostelPreferenceDetails } from '../../types';
 import { Timeline } from '../../components/common/Timeline';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { ArrowRight, FileCheck, Building2, CheckCircle2, User, Home, Sparkles } from 'lucide-react';
+import { ArrowRight, FileCheck, Building2, CheckCircle2, User, Home, Sparkles, AlertCircle } from 'lucide-react';
 
 export const StudentDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +32,11 @@ export const StudentDashboardPage: React.FC = () => {
   const status = application?.status || 'PROFILE_COMPLETED';
   const feeStatus = application?.feeReceipt?.status || 'NOT_SUBMITTED';
   const allocation = application?.allocation;
-  const hostelType = getHostelTypeDetails(user?.studentProfile?.hostelType);
+  const student = user?.studentProfile;
+  const yearOfStudy = student?.yearOfStudy || 1;
+  const preferredHostel = student?.preferredHostel || (student?.gender === 'FEMALE' ? 'RAJAM_NRI' : 'ORCHID');
+  const hostelDetails = getHostelPreferenceDetails(student?.gender || 'MALE', preferredHostel, yearOfStudy);
+  const remainingDue = student?.remainingFeeDue || 0;
 
   return (
     <div>
@@ -44,14 +48,34 @@ export const StudentDashboardPage: React.FC = () => {
               Welcome, {user?.name}
             </div>
             <div style={{ fontSize: '12px', color: '#AAAAAA', marginTop: '4px' }}>
-              Roll Number: <strong>{user?.studentProfile?.rollNumber || 'N/A'}</strong> | Department: {user?.studentProfile?.department}
+              Roll Number: <strong>{student?.rollNumber || 'N/A'}</strong> | Department: {student?.department} | Level: {yearOfStudy === 1 ? '1st Year' : `${yearOfStudy}th Year`}
             </div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.1)', padding: '6px 14px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', fontSize: '11px', fontWeight: 700 }}>
-            {hostelType.name} ({hostelType.feeFormatted})
+          <div style={{ background: 'rgba(255,255,255,0.1)', padding: '6px 14px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: 700 }}>
+            🏛️ {hostelDetails.name} ({hostelDetails.feeFormatted})
           </div>
         </div>
       </div>
+
+      {/* Reassignment & Remaining Fee Alert Banner */}
+      {remainingDue > 0 && (
+        <div style={{ background: '#FEF7E0', border: '1px solid #F9AB00', padding: '16px 20px', borderRadius: '4px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <AlertCircle size={24} color="#B06000" />
+            <div>
+              <div style={{ fontWeight: 800, color: '#B06000', fontSize: '14px' }}>
+                Hostel Reassigned to {hostelDetails.name} • Fee Difference Due: ₹{remainingDue.toLocaleString('en-IN')}
+              </div>
+              <div style={{ fontSize: '12px', color: '#7A4100', marginTop: '2px' }}>
+                Your hostel complex was updated by the Administration. Please submit the payment receipt for the balance to select your room.
+              </div>
+            </div>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={() => navigate('/student/fee-upload')}>
+            Pay & Upload Receipt (₹{remainingDue.toLocaleString('en-IN')}) <ArrowRight size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Lifecycle Timeline */}
       <Timeline currentStatus={status} />
@@ -66,13 +90,15 @@ export const StudentDashboardPage: React.FC = () => {
               <StatusBadge status={status} />
             </div>
 
-            {status === 'PROFILE_COMPLETED' && (
+            {(status === 'PROFILE_COMPLETED' || (status as string) === 'FEE_PENDING') && (
               <div>
                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                  Your student profile is active. Assigned Plan: <strong>{hostelType.name}</strong> (Fee: <strong>{hostelType.feeFormatted}</strong>). To proceed with room selection, please upload your official hostel fee payment receipt for administrative verification.
+                  {remainingDue > 0
+                    ? `Your assigned hostel is ${hostelDetails.name}. A remaining balance of ₹${remainingDue.toLocaleString('en-IN')} is due. Please upload your payment receipt for verification.`
+                    : `Your student profile is active for ${hostelDetails.name} (Fee: ${hostelDetails.feeFormatted}). Please upload your hostel fee payment receipt to proceed with room selection.`}
                 </div>
                 <button className="btn btn-primary" onClick={() => navigate('/student/fee-upload')}>
-                  <FileCheck size={14} /> Upload Fee Receipt ({hostelType.feeFormatted}) <ArrowRight size={14} />
+                  <FileCheck size={14} /> Upload Fee Receipt ({remainingDue > 0 ? `₹${remainingDue.toLocaleString('en-IN')}` : hostelDetails.feeFormatted}) <ArrowRight size={14} />
                 </button>
               </div>
             )}
@@ -80,7 +106,7 @@ export const StudentDashboardPage: React.FC = () => {
             {status === 'FEE_SUBMITTED' && (
               <div>
                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                  Fee receipt <strong>{application?.feeReceipt?.receiptNumber}</strong> (₹{application?.feeReceipt?.amount?.toLocaleString('en-IN')}) is currently pending verification by the Hostel Administration. Once approved, room selection will unlock automatically.
+                  Fee receipt <strong>{application?.feeReceipt?.receiptNumber}</strong> (₹{application?.feeReceipt?.amount?.toLocaleString('en-IN')}) is currently pending verification by the Hostel Administration. Once approved, room selection in <strong>{hostelDetails.name}</strong> will unlock automatically.
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <StatusBadge status="PENDING" label="Awaiting Admin Verification" />
@@ -91,7 +117,7 @@ export const StudentDashboardPage: React.FC = () => {
             {(status === 'FEE_VERIFIED' || status === 'ROOM_SELECTION') && (
               <div>
                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                  Your fee payment of <strong>₹{application?.feeReceipt?.amount?.toLocaleString('en-IN')}</strong> has been approved! Interactive Hostel Floor Plan & Bed Selection is now active.
+                  Your fee payment of <strong>₹{application?.feeReceipt?.amount?.toLocaleString('en-IN')}</strong> has been approved! Interactive Hostel Floor Plan & Bed Selection is now active for <strong>{hostelDetails.name}</strong>.
                 </div>
                 <button className="btn btn-primary" onClick={() => navigate('/student/room-selection')}>
                   <Building2 size={14} /> Proceed to Interactive Room Selection <ArrowRight size={14} />
@@ -137,8 +163,8 @@ export const StudentDashboardPage: React.FC = () => {
           <div className="swiss-card">
             <div className="card-title" style={{ marginBottom: '16px' }}>Hostel Plan & Fee Record</div>
             <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-              <div>Accommodation: <strong>{hostelType.name}</strong></div>
-              <div>Assigned Fee: <strong>{hostelType.feeFormatted}</strong></div>
+              <div>Accommodation: <strong>{hostelDetails.name}</strong></div>
+              <div>Assigned Fee: <strong>{hostelDetails.feeFormatted}</strong></div>
             </div>
             {application?.feeReceipt ? (
               <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px dashed var(--border-medium)', paddingTop: '10px' }}>

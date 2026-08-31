@@ -36,20 +36,31 @@ export class HostelController {
       const where: any = {};
       if (hostelId) where.hostelId = hostelId as string;
 
-      // If requested by a student, automatically enforce gender segregation
-      let targetGender = gender as string | undefined;
+      // If requested by a student, automatically restrict to their assigned hostel
       if (req.user?.role === 'STUDENT' && req.user.studentId) {
         const student = await prisma.studentProfile.findUnique({
           where: { id: req.user.studentId },
-          select: { gender: true },
+          select: { gender: true, preferredHostel: true },
         });
-        if (student?.gender) {
-          targetGender = student.gender;
-        }
-      }
 
-      if (targetGender) {
-        const gen = targetGender.toUpperCase();
+        if (student?.preferredHostel) {
+          where.OR = [
+            { code: `BLK-${student.preferredHostel}` },
+            { hostel: { code: student.preferredHostel } },
+            { hostel: { name: { contains: student.preferredHostel } } },
+            { name: { contains: student.preferredHostel } },
+          ];
+        } else if (student?.gender) {
+          const gen = student.gender.toUpperCase();
+          where.OR = [
+            { gender: gen },
+            { gender: 'COED' },
+            { name: { contains: gen === 'FEMALE' ? 'Women' : 'Men' } },
+            { name: { contains: gen === 'FEMALE' ? 'Girls' : 'Boys' } },
+          ];
+        }
+      } else if (gender) {
+        const gen = (gender as string).toUpperCase();
         where.OR = [
           { gender: gen },
           { gender: 'COED' },

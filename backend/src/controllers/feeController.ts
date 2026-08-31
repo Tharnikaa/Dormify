@@ -174,6 +174,21 @@ export class FeeController {
         data: { status: nextAppStatus },
       });
 
+      if (status === 'APPROVED') {
+        const student = await prisma.studentProfile.findUnique({
+          where: { id: receipt.application.studentId },
+        });
+        if (student) {
+          await prisma.studentProfile.update({
+            where: { id: student.id },
+            data: {
+              totalFeePaid: (student.totalFeePaid || 0) + receipt.amount,
+              remainingFeeDue: 0,
+            },
+          });
+        }
+      }
+
       const actionName = status === 'APPROVED' ? 'FEE_APPROVED' : 'FEE_REJECTED';
       const desc = status === 'APPROVED'
         ? `Approved fee receipt ${receipt.receiptNumber} for student roll ${receipt.application.student.rollNumber}`

@@ -30,9 +30,12 @@ export interface StudentProfile {
   userId: string;
   rollNumber: string;
   department: string;
+  yearOfStudy?: number;
   hostelType?: string;
   quota?: string;
   preferredHostel?: string;
+  totalFeePaid?: number;
+  remainingFeeDue?: number;
   phone: string;
   guardianName: string;
   guardianPhone: string;
@@ -65,26 +68,91 @@ export interface HostelOption {
   features: string;
 }
 
+export const isSpecialHostel = (hostelCode?: string | null): 'ORCHID' | 'RAJAM_NRI' | 'GENERAL' => {
+  if (!hostelCode) return 'GENERAL';
+  const code = hostelCode.toUpperCase();
+  if (code.includes('ORCHID')) return 'ORCHID';
+  if (code.includes('RAJAM')) return 'RAJAM_NRI';
+  return 'GENERAL';
+};
+
+export const getHostelFee = (yearOfStudy: number = 1, hostelCode?: string | null): number => {
+  const specialType = isSpecialHostel(hostelCode);
+  const isFirstYear = yearOfStudy === 1;
+
+  if (isFirstYear) {
+    if (specialType === 'ORCHID') return 140735;
+    if (specialType === 'RAJAM_NRI') return 107084;
+    return 47197; // General Hostel
+  } else {
+    // 2nd, 3rd, Final Year
+    if (specialType === 'ORCHID') return 124735;
+    if (specialType === 'RAJAM_NRI') return 96084;
+    return 40797; // General Hostel
+  }
+};
+
+export const calculateFeeDifference = (
+  yearOfStudy: number = 1,
+  fromHostelCode: string | null | undefined,
+  toHostelCode: string | null | undefined,
+  alreadyPaidAmount: number = 0
+) => {
+  const currentFee = getHostelFee(yearOfStudy, fromHostelCode);
+  const newFee = getHostelFee(yearOfStudy, toHostelCode);
+
+  const fromType = isSpecialHostel(fromHostelCode);
+  const toType = isSpecialHostel(toHostelCode);
+
+  if (fromType === 'GENERAL' && toType === 'GENERAL') {
+    return {
+      currentFee,
+      newFee,
+      alreadyPaid: alreadyPaidAmount,
+      remainingDue: 0,
+      isDifferenceApplicable: false,
+    };
+  }
+
+  const effectivePaid = alreadyPaidAmount > 0 ? alreadyPaidAmount : currentFee;
+  const rawDiff = newFee - effectivePaid;
+  const remainingDue = rawDiff > 0 ? rawDiff : 0;
+
+  return {
+    currentFee,
+    newFee,
+    alreadyPaid: effectivePaid,
+    remainingDue,
+    isDifferenceApplicable: remainingDue > 0,
+  };
+};
+
 export const BOYS_HOSTELS: HostelOption[] = [
-  { id: 'ORCHID', name: 'Orchid International', fee: 85000, feeFormatted: '₹85,000', features: 'Air Conditioned • Wi-Fi • Attached Bathroom' },
-  { id: 'BIRLA', name: 'Birla', fee: 45000, feeFormatted: '₹45,000', features: 'Sharing Accommodation • High-Speed LAN • Study Desk' },
-  { id: 'BHAVANI', name: 'Bhavani', fee: 45000, feeFormatted: '₹45,000', features: 'Sharing Accommodation • Campus Amenities • Dining Facility' },
-  { id: 'KURINJI', name: 'Kurinji', fee: 65000, feeFormatted: '₹65,000', features: 'Deluxe Non-AC • Attached Bath • Study Lounges' },
-  { id: 'MARUDHAM', name: 'Marudham', fee: 45000, feeFormatted: '₹45,000', features: 'Sharing Accommodation • Solar Hot Water • Library' },
-  { id: 'THAMIRA', name: 'Thamira Bhavani', fee: 65000, feeFormatted: '₹65,000', features: 'Deluxe Non-AC • Attached Bath • Modern Amenities' },
-  { id: 'AMARAVATHI', name: 'Amaravathi', fee: 45000, feeFormatted: '₹45,000', features: 'Sharing Accommodation • Recreation & Gym Facilities' },
+  { id: 'ORCHID', name: 'Orchid International', fee: 140735, feeFormatted: '₹1,40,735', features: 'Air Conditioned • Premium International Complex' },
+  { id: 'BIRLA', name: 'Birla', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • High-Speed LAN' },
+  { id: 'BHAVANI', name: 'Bhavani', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • Campus Amenities' },
+  { id: 'KURINJI', name: 'Kurinji', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • Modern Wing' },
+  { id: 'MARUDHAM', name: 'Marudham', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • Eco Campus' },
+  { id: 'THAMIRA', name: 'Thamira Bhavani', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • Academic Block' },
+  { id: 'AMARAVATHI', name: 'Amaravathi', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • First Year Block' },
 ];
 
 export const GIRLS_HOSTELS: HostelOption[] = [
-  { id: 'RAJAM_NRI', name: 'Rajam NRI', fee: 85000, feeFormatted: '₹85,000', features: 'Air Conditioned • Attached Bathroom • 24/7 Security' },
-  { id: 'PONNI', name: 'Ponni', fee: 45000, feeFormatted: '₹45,000', features: 'Sharing Accommodation • Courtyard View • Dining Hall' },
-  { id: 'KAVERI', name: 'Kaveri', fee: 65000, feeFormatted: '₹65,000', features: 'Deluxe Non-AC • Attached Bath • High-Speed Wi-Fi' },
-  { id: 'VAIGAI', name: 'Vaigai', fee: 45000, feeFormatted: '₹45,000', features: 'Sharing Accommodation • Garden Proximity • Recreation Room' },
+  { id: 'RAJAM_NRI', name: 'Rajam NRI', fee: 107084, feeFormatted: '₹1,07,084', features: 'Air Conditioned • Premier NRI Complex' },
+  { id: 'PONNI', name: 'Ponni', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • Courtyard View' },
+  { id: 'KAVERI', name: 'Kaveri', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • High-Speed Wi-Fi' },
+  { id: 'VAIGAI', name: 'Vaigai', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • Garden Proximity' },
 ];
 
-export const getHostelPreferenceDetails = (gender: string, hostelId?: string): HostelOption => {
+export const getHostelPreferenceDetails = (gender: string, hostelId?: string, year: number = 1): HostelOption => {
   const list = gender === 'FEMALE' ? GIRLS_HOSTELS : BOYS_HOSTELS;
-  return list.find((h) => h.id === hostelId) || list[0];
+  const match = list.find((h) => h.id === hostelId) || list[0];
+  const fee = getHostelFee(year, match.id);
+  return {
+    ...match,
+    fee,
+    feeFormatted: `₹${fee.toLocaleString('en-IN')}`,
+  };
 };
 
 export interface HostelTypeOption {

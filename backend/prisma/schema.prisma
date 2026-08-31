@@ -28,9 +28,12 @@ model StudentProfile {
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   rollNumber      String       @unique
   department      String
+  yearOfStudy     Int          @default(1) // 1 = 1st Year, 2 = 2nd Year, 3 = 3rd Year, 4 = Final Year
   hostelType      String       @default("REGULAR_NON_AC") // "REGULAR_NON_AC", "DELUXE_NON_AC", "AC_SHARED", "AC_SINGLE"
   quota           String       @default("TNEA") // "TNEA", "OTHER_STATES", "NRI", "FOREIGN_NATIONALS", "FOUNDERS_QUOTA", "CONSORTIUM_OF_INDUSTRIES"
   preferredHostel String?
+  totalFeePaid    Float        @default(0)
+  remainingFeeDue Float        @default(0)
   phone           String
   guardianName    String
   guardianPhone   String
@@ -67,17 +70,18 @@ model AcademicYear {
 }
 
 model Application {
-  id             String       @id @default(uuid())
-  studentId      String
-  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  academicYearId String
-  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
-  status         String       @default("REGISTERED") // "REGISTERED", "PROFILE_COMPLETED", "FEE_SUBMITTED", "FEE_VERIFIED", "ROOM_SELECTION", "ALLOCATED"
-  submittedAt    DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id               String       @id @default(uuid())
+  studentId        String
+  student          StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYearId   String
+  academicYear     AcademicYear @relation(fields: [academicYearId], references: [id])
+  status           String       @default("REGISTERED") // "REGISTERED", "PROFILE_COMPLETED", "FEE_SUBMITTED", "FEE_VERIFIED", "ROOM_SELECTION", "ALLOCATED"
+  isHostelChanged  Boolean      @default(false)
+  submittedAt      DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
-  feeReceipt     FeeReceipt?
-  allocation     Allocation?
+  feeReceipt       FeeReceipt?
+  allocation       Allocation?
 
   @@unique([studentId, academicYearId])
 }
@@ -159,6 +163,7 @@ model FeeReceipt {
   application      Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   receiptNumber    String
   amount           Float
+  receiptType      String      @default("FULL") // "FULL", "REMAINDER_DIFFERENCE"
   fileUrl          String
   originalFilename String
   mimeType         String

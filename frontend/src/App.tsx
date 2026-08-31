@@ -16,6 +16,8 @@ import { StudentSettingsPage } from './pages/student/StudentSettingsPage';
 
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { StudentManagementPage } from './pages/admin/StudentManagementPage';
+import { ChangeHostelPage } from './pages/admin/ChangeHostelPage';
+import { BatchHostelShiftingPage } from './pages/admin/BatchHostelShiftingPage';
 import { FeeVerificationPage } from './pages/admin/FeeVerificationPage';
 import { HostelManagementPage } from './pages/admin/HostelManagementPage';
 import { ManualAllocationPage } from './pages/admin/ManualAllocationPage';
@@ -70,6 +72,8 @@ export const App: React.FC = () => {
               {/* Admin Portal */}
               <Route path="/admin/dashboard" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><AdminDashboardPage /></ProtectedRoute>} />
               <Route path="/admin/students" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><StudentManagementPage /></ProtectedRoute>} />
+              <Route path="/admin/students/:id/change-hostel" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><ChangeHostelPage /></ProtectedRoute>} />
+              <Route path="/admin/batch-shifting" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><BatchHostelShiftingPage /></ProtectedRoute>} />
               <Route path="/admin/fee-verification" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><FeeVerificationPage /></ProtectedRoute>} />
               <Route path="/admin/hostel-mgmt" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><HostelManagementPage /></ProtectedRoute>} />
               <Route path="/admin/manual-allocation" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><ManualAllocationPage /></ProtectedRoute>} />
