@@ -1,0 +1,52 @@
+:root {
+  /* Swiss Editorial Premium Neutral Palette */
+  --bg-app: #F5F5F0;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #ECECE6;
+  --bg-hover: #E4E4DC;
+  --bg-dark: #111111;
+
+  /* High Contrast Swiss Enterprise Typography */
+  --text-primary: #111111;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  --text-inverse: #FFFFFF;
+
+  /* Hairline Crisp 1px Borders */
+  --border-light: #E0E0D8;
+  --border-medium: #C8C8C0;
+  --border-dark: #111111;
+
+  /* Swiss Status Colors */
+  --status-available-bg: #EAF5EA;
+  --status-available-text: #0F6826;
+  --status-available-border: #C2E5C2;
+
+  --status-occupied-bg: #F0F0EE;
+  --status-occupied-text: #444444;
+  --status-occupied-border: #D4D4CE;
+
+  --status-partial-bg: #EBF3FE;
+  --status-partial-text: #1256C4;
+  --status-partial-border: #C8DCFA;
+
+  --status-pending-bg: #FFF8E6;
+  --status-pending-text: #925400;
+  --status-pending-border: #F3E0B5;
+
+  --status-maintenance-bg: #FDF0ED;
+  --status-maintenance-text: #A81B18;
+  --status-maintenance-border: #F6C8C5;
+
+  --status-reserved-bg: #F5EEFE;
+  --status-reserved-text: #631FA4;
+  --status-reserved-border: #E2CEFB;
+
+  /* Geometry & Fonts */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  --font-sans: 'Inter', 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, monospace;
+}

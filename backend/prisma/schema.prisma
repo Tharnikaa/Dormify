@@ -1,0 +1,210 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String          @id @default(uuid())
+  email        String          @unique
+  passwordHash String
+  role         String          @default("STUDENT") // "STUDENT", "ADMIN", "HOD"
+  name         String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  studentProfile StudentProfile?
+  adminProfile   AdminProfile?
+  notifications  Notification[]
+  auditLogs      AuditLog[]      @relation("ActorUser")
+}
+
+model StudentProfile {
+  id            String       @id @default(uuid())
+  userId        String       @unique
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rollNumber    String       @unique
+  department    String
+  phone         String
+  guardianName  String
+  guardianPhone String
+  gender        String
+  address       String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  applications  Application[]
+}
+
+model AdminProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId  String   @unique
+  department  String
+  designation String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AcademicYear {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applications Application[]
+  allocations  Allocation[]
+}
+
+model Application {
+  id             String       @id @default(uuid())
+  studentId      String
+  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  status         String       @default("REGISTERED") // "REGISTERED", "PROFILE_COMPLETED", "FEE_SUBMITTED", "FEE_VERIFIED", "ROOM_SELECTION", "ALLOCATED"
+  submittedAt    DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  feeReceipt     FeeReceipt?
+  allocation     Allocation?
+
+  @@unique([studentId, academicYearId])
+}
+
+model Hostel {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  code        String   @unique
+  gender      String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blocks      Block[]
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  hostelId  String
+  hostel    Hostel   @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+  name      String
+  code      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  floors    Floor[]
+
+  @@unique([hostelId, code])
+}
+
+model Floor {
+  id          String   @id @default(uuid())
+  blockId     String
+  block       Block    @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  floorNumber Int
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rooms       Room[]
+
+  @@unique([blockId, floorNumber])
+}
+
+model Room {
+  id         String   @id @default(uuid())
+  floorId    String
+  floor      Floor    @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  roomNumber String
+  capacity   Int
+  roomType   String
+  status     String   @default("AVAILABLE") // "AVAILABLE", "PARTIALLY_OCCUPIED", "FULL", "MAINTENANCE", "RESERVED"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  beds       Bed[]
+
+  @@unique([floorId, roomNumber])
+}
+
+model Bed {
+  id        String   @id @default(uuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  bedNumber String
+  status    String   @default("AVAILABLE") // "AVAILABLE", "OCCUPIED", "RESERVED", "MAINTENANCE"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  allocations Allocation[]
+
+  @@unique([roomId, bedNumber])
+}
+
+model FeeReceipt {
+  id               String      @id @default(uuid())
+  applicationId    String      @unique
+  application      Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  receiptNumber    String
+  amount           Float
+  fileUrl          String
+  originalFilename String
+  mimeType         String
+  fileSize         Int
+  submissionDate   DateTime    @default(now())
+  status           String      @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  verificationDate DateTime?
+  reviewerAdminId  String?
+  rejectionReason  String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model Allocation {
+  id             String       @id @default(uuid())
+  applicationId  String       @unique
+  application    Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  bedId          String
+  bed            Bed          @relation(fields: [bedId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  allocationDate DateTime     @default(now())
+  status         String       @default("ACTIVE") // "ACTIVE", "CANCELLED", "TRANSFERRED"
+  allocatedBy    String       @default("SELF") // "SELF", "ADMIN"
+  reason         String?
+  letterRefCode  String       @unique @default(uuid())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([bedId, academicYearId, status])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String
+  actor       User     @relation("ActorUser", fields: [actorUserId], references: [id])
+  action      String
+  targetType  String
+  targetId    String?
+  description String
+  timestamp   DateTime @default(now())
+}
