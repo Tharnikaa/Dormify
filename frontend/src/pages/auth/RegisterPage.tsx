@@ -216,11 +216,8 @@ export const RegisterPage: React.FC = () => {
                 <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                   Assigned Institutional Fee (INR)
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px' }}>
                   {selectedHostelDetails.name}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  {selectedHostelDetails.features}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
