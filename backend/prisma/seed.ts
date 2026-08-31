@@ -64,132 +64,105 @@ async function main() {
   });
   console.log(`[Seed] Admin User created: ${adminUser.email}`);
 
-  // 4. Create Hostel Structure (Hostel -> Blocks -> Floors -> Rooms -> Beds)
-  const hostel = await prisma.hostel.upsert({
-    where: { code: 'GUH' },
-    update: {
-      name: 'MIT Hostels',
-    },
-    create: {
-      name: 'MIT Hostels',
-      code: 'MITH',
-      gender: 'COED',
-      description: 'Madras Institute Of Technology Residential Hostel Complex',
-    },
-  });
+  // 4. Create MIT Institutional Hostels & Blocks Structure
+  const boysHostels = [
+    { name: 'Orchid International', code: 'ORCHID', desc: 'Air-Conditioned & International Scholars Boys Residence' },
+    { name: 'Birla', code: 'BIRLA', desc: 'Senior Engineering Undergraduate Boys Residence' },
+    { name: 'Bhavani', code: 'BHAVANI', desc: 'Central Campus Undergraduate Boys Residence' },
+    { name: 'Kurinji', code: 'KURINJI', desc: 'Hillside Modern Block Boys Residence' },
+    { name: 'Marudham', code: 'MARUDHAM', desc: 'Eco-Green Campus Boys Residence' },
+    { name: 'Thamira Bhavani', code: 'THAMIRA', desc: 'Premier Academic Block Boys Residence' },
+    { name: 'Amaravathi', code: 'AMARAVATHI', desc: 'First Year Engineering Boys Residence' },
+  ];
 
-  // Block A (Men)
-  const blockA = await prisma.block.upsert({
-    where: { hostelId_code: { hostelId: hostel.id, code: 'BLK-A' } },
-    update: {},
-    create: {
-      hostelId: hostel.id,
-      name: 'Block A - Men\'s Wing',
-      code: 'BLK-A',
-    },
-  });
+  const girlsHostels = [
+    { name: 'Rajam NRI', code: 'RAJAM_NRI', desc: 'Premier Air-Conditioned & NRI Scholars Girls Residence' },
+    { name: 'Ponni', code: 'PONNI', desc: 'Undergraduate Engineering Girls Residence' },
+    { name: 'Kaveri', code: 'KAVERI', desc: 'Senior Scholar & Post-Graduate Girls Residence' },
+    { name: 'Vaigai', code: 'VAIGAI', desc: 'Garden View Engineering Girls Residence' },
+  ];
 
-  // Block B (Women)
-  const blockB = await prisma.block.upsert({
-    where: { hostelId_code: { hostelId: hostel.id, code: 'BLK-B' } },
-    update: {},
-    create: {
-      hostelId: hostel.id,
-      name: 'Block B - Women\'s Wing',
-      code: 'BLK-B',
-    },
-  });
-
-  // Create Floors for Block A
-  for (let floorNum = 1; floorNum <= 3; floorNum++) {
-    const floor = await prisma.floor.upsert({
-      where: { blockId_floorNumber: { blockId: blockA.id, floorNumber: floorNum } },
-      update: {},
-      create: {
-        blockId: blockA.id,
-        floorNumber: floorNum,
-        name: `Floor ${floorNum}`,
-      },
+  // Seed Boys Hostels & Blocks
+  for (const bh of boysHostels) {
+    const h = await prisma.hostel.upsert({
+      where: { code: bh.code },
+      update: { name: `${bh.name} (Boys Hostel)`, gender: 'MALE', description: bh.desc },
+      create: { name: `${bh.name} (Boys Hostel)`, code: bh.code, gender: 'MALE', description: bh.desc },
     });
 
-    // Create Rooms for Floor
-    for (let r = 1; r <= 5; r++) {
-      const roomNum = `A-${floorNum}0${r}`;
-      let roomStatus = 'AVAILABLE';
-      
-      if (r === 4 && floorNum === 1) roomStatus = 'MAINTENANCE';
-      if (r === 5 && floorNum === 1) roomStatus = 'RESERVED';
+    const blk = await prisma.block.upsert({
+      where: { hostelId_code: { hostelId: h.id, code: `BLK-${bh.code}` } },
+      update: { name: `${bh.name} - Boys Block`, gender: 'MALE' },
+      create: { hostelId: h.id, name: `${bh.name} - Boys Block`, code: `BLK-${bh.code}`, gender: 'MALE' },
+    });
 
-      const room = await prisma.room.upsert({
-        where: { floorId_roomNumber: { floorId: floor.id, roomNumber: roomNum } },
+    for (let fNum = 1; fNum <= 3; fNum++) {
+      const flr = await prisma.floor.upsert({
+        where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fNum } },
         update: {},
-        create: {
-          floorId: floor.id,
-          roomNumber: roomNum,
-          capacity: 2,
-          roomType: 'DOUBLE',
-          status: roomStatus,
-        },
+        create: { blockId: blk.id, floorNumber: fNum, name: `Floor ${fNum}` },
       });
 
-      // Create 2 Beds per room
-      for (const bedLetter of ['A', 'B']) {
-        const bedStatus = roomStatus === 'MAINTENANCE' ? 'MAINTENANCE' : 
-                          roomStatus === 'RESERVED' ? 'RESERVED' : 'AVAILABLE';
-        await prisma.bed.upsert({
-          where: { roomId_bedNumber: { roomId: room.id, bedNumber: bedLetter } },
+      for (let r = 1; r <= 4; r++) {
+        const roomNum = `${bh.code.substring(0, 3)}-${fNum}0${r}`;
+        const room = await prisma.room.upsert({
+          where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
           update: {},
-          create: {
-            roomId: room.id,
-            bedNumber: bedLetter,
-            status: bedStatus,
-          },
+          create: { floorId: flr.id, roomNumber: roomNum, capacity: 2, roomType: 'DOUBLE', status: 'AVAILABLE' },
         });
+
+        for (const bLetter of ['A', 'B']) {
+          await prisma.bed.upsert({
+            where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
+            update: {},
+            create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+          });
+        }
       }
     }
   }
 
-  // Create Floors for Block B
-  for (let floorNum = 1; floorNum <= 2; floorNum++) {
-    const floor = await prisma.floor.upsert({
-      where: { blockId_floorNumber: { blockId: blockB.id, floorNumber: floorNum } },
-      update: {},
-      create: {
-        blockId: blockB.id,
-        floorNumber: floorNum,
-        name: `Floor ${floorNum}`,
-      },
+  // Seed Girls Hostels & Blocks
+  for (const gh of girlsHostels) {
+    const h = await prisma.hostel.upsert({
+      where: { code: gh.code },
+      update: { name: `${gh.name} (Girls Hostel)`, gender: 'FEMALE', description: gh.desc },
+      create: { name: `${gh.name} (Girls Hostel)`, code: gh.code, gender: 'FEMALE', description: gh.desc },
     });
 
-    for (let r = 1; r <= 4; r++) {
-      const roomNum = `B-${floorNum}0${r}`;
-      const room = await prisma.room.upsert({
-        where: { floorId_roomNumber: { floorId: floor.id, roomNumber: roomNum } },
+    const blk = await prisma.block.upsert({
+      where: { hostelId_code: { hostelId: h.id, code: `BLK-${gh.code}` } },
+      update: { name: `${gh.name} - Girls Block`, gender: 'FEMALE' },
+      create: { hostelId: h.id, name: `${gh.name} - Girls Block`, code: `BLK-${gh.code}`, gender: 'FEMALE' },
+    });
+
+    for (let fNum = 1; fNum <= 3; fNum++) {
+      const flr = await prisma.floor.upsert({
+        where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fNum } },
         update: {},
-        create: {
-          floorId: floor.id,
-          roomNumber: roomNum,
-          capacity: 2,
-          roomType: 'DOUBLE',
-          status: 'AVAILABLE',
-        },
+        create: { blockId: blk.id, floorNumber: fNum, name: `Floor ${fNum}` },
       });
 
-      for (const bedLetter of ['A', 'B']) {
-        await prisma.bed.upsert({
-          where: { roomId_bedNumber: { roomId: room.id, bedNumber: bedLetter } },
+      for (let r = 1; r <= 4; r++) {
+        const roomNum = `${gh.code.substring(0, 3)}-${fNum}0${r}`;
+        const room = await prisma.room.upsert({
+          where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
           update: {},
-          create: {
-            roomId: room.id,
-            bedNumber: bedLetter,
-            status: 'AVAILABLE',
-          },
+          create: { floorId: flr.id, roomNumber: roomNum, capacity: 2, roomType: 'DOUBLE', status: 'AVAILABLE' },
         });
+
+        for (const bLetter of ['A', 'B']) {
+          await prisma.bed.upsert({
+            where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
+            update: {},
+            create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+          });
+        }
       }
     }
   }
 
-  console.log('[Seed] Hostel structure created with Blocks, Floors, Rooms, and Beds.');
+  console.log('[Seed] All MIT Boys Hostels (7) and Girls Hostels (4) seeded with Blocks, Floors, and Beds.');
 
   // 5. Seed Students with different lifecycle stages
 
@@ -206,9 +179,10 @@ async function main() {
         create: {
           rollNumber: 'STU2026001',
           department: 'Computer Science',
-          phone: '+1 (555) 234-5678',
+          hostelType: 'REGULAR_NON_AC',
+          phone: '+91 98401 23456',
           guardianName: 'Carlos Rivera',
-          guardianPhone: '+1 (555) 876-5432',
+          guardianPhone: '+91 98401 87654',
           gender: 'MALE',
           address: '42 Campus Way, North Wing',
         },
@@ -234,7 +208,7 @@ async function main() {
       create: {
         applicationId: app1.id,
         receiptNumber: 'REC-2026-001',
-        amount: 12500.0,
+        amount: 45000.0,
         fileUrl: '/uploads/receipts/sample_receipt_1.pdf',
         originalFilename: 'Hostel_Fee_Receipt_2026.pdf',
         mimeType: 'application/pdf',
@@ -245,7 +219,7 @@ async function main() {
       },
     });
 
-    const targetRoom = await prisma.room.findFirst({ where: { roomNumber: 'A-101' } });
+    const targetRoom = await prisma.room.findFirst({ where: { roomNumber: 'ORC-101' } }) || await prisma.room.findFirst();
     if (targetRoom) {
       const targetBed = await prisma.bed.findFirst({ where: { roomId: targetRoom.id, bedNumber: 'A' } });
       if (targetBed) {
@@ -279,9 +253,10 @@ async function main() {
         create: {
           rollNumber: 'STU2026002',
           department: 'Electrical Engineering',
-          phone: '+1 (555) 345-6789',
+          hostelType: 'DELUXE_NON_AC',
+          phone: '+91 94441 34567',
           guardianName: 'Rajesh Sharma',
-          guardianPhone: '+1 (555) 987-6543',
+          guardianPhone: '+91 94441 98765',
           gender: 'FEMALE',
           address: '88 Innovation Boulevard',
         },
@@ -307,7 +282,7 @@ async function main() {
       create: {
         applicationId: app2.id,
         receiptNumber: 'REC-2026-002',
-        amount: 12500.0,
+        amount: 65000.0,
         fileUrl: '/uploads/receipts/sample_receipt_2.pdf',
         originalFilename: 'Priya_Hostel_Fee.pdf',
         mimeType: 'application/pdf',
@@ -332,9 +307,10 @@ async function main() {
         create: {
           rollNumber: 'STU2026003',
           department: 'Mechanical Engineering',
-          phone: '+1 (555) 456-7890',
+          hostelType: 'AC_SHARED',
+          phone: '+91 97891 45678',
           guardianName: 'David Vance',
-          guardianPhone: '+1 (555) 876-1122',
+          guardianPhone: '+91 97891 87611',
           gender: 'MALE',
           address: '15 Science Park Ave',
         },
@@ -360,7 +336,7 @@ async function main() {
       create: {
         applicationId: app3.id,
         receiptNumber: 'REC-2026-003',
-        amount: 12500.0,
+        amount: 85000.0,
         fileUrl: '/uploads/receipts/sample_receipt_3.pdf',
         originalFilename: 'Marcus_Receipt_Copy.pdf',
         mimeType: 'application/pdf',

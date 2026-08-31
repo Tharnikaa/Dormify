@@ -83,6 +83,8 @@ export const StudentManagementPage: React.FC = () => {
                 <th>Roll Number</th>
                 <th>Student Name</th>
                 <th>Department</th>
+                <th>Hostel Plan</th>
+                <th>Admission Quota</th>
                 <th>Gender</th>
                 <th>Fee Status</th>
                 <th>Application Lifecycle</th>
@@ -103,6 +105,8 @@ export const StudentManagementPage: React.FC = () => {
                     <td><strong>{student.rollNumber}</strong></td>
                     <td>{student.user?.name}</td>
                     <td>{student.department}</td>
+                    <td><span className="status-badge badge-AVAILABLE">{student.hostelType ? student.hostelType.replace(/_/g, ' ') : 'STANDARD NON AC'}</span></td>
+                    <td><span className="status-badge badge-PENDING">{student.quota || 'TNEA'}</span></td>
                     <td>{student.gender}</td>
                     <td><StatusBadge status={feeStatus} /></td>
                     <td><StatusBadge status={app?.status || 'REGISTERED'} /></td>

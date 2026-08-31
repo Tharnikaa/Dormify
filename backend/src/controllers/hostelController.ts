@@ -32,9 +32,31 @@ export class HostelController {
 
   static async getBlocks(req: Request, res: Response) {
     try {
-      const { hostelId } = req.query;
+      const { hostelId, gender } = req.query;
       const where: any = {};
       if (hostelId) where.hostelId = hostelId as string;
+
+      // If requested by a student, automatically enforce gender segregation
+      let targetGender = gender as string | undefined;
+      if (req.user?.role === 'STUDENT' && req.user.studentId) {
+        const student = await prisma.studentProfile.findUnique({
+          where: { id: req.user.studentId },
+          select: { gender: true },
+        });
+        if (student?.gender) {
+          targetGender = student.gender;
+        }
+      }
+
+      if (targetGender) {
+        const gen = targetGender.toUpperCase();
+        where.OR = [
+          { gender: gen },
+          { gender: 'COED' },
+          { name: { contains: gen === 'FEMALE' ? 'Women' : 'Men' } },
+          { name: { contains: gen === 'FEMALE' ? 'Girls' : 'Boys' } },
+        ];
+      }
 
       const blocks = await prisma.block.findMany({
         where,

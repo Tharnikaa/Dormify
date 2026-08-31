@@ -97,6 +97,21 @@ export class AllocationService {
           throw error;
         }
 
+        const blockGender = (targetBed.room.floor.block.gender || targetBed.room.floor.block.hostel.gender || '').toUpperCase();
+        const studentGender = (application.student.gender || '').toUpperCase();
+
+        if (blockGender === 'FEMALE' && studentGender === 'MALE') {
+          const error: any = new Error('Male students cannot select beds in Girls Hostel / Women\'s Wing.');
+          error.statusCode = 403;
+          throw error;
+        }
+
+        if (blockGender === 'MALE' && studentGender === 'FEMALE') {
+          const error: any = new Error('Female students cannot select beds in Boys Hostel / Men\'s Wing.');
+          error.statusCode = 403;
+          throw error;
+        }
+
         if (targetBed.room.status === 'MAINTENANCE') {
           const error: any = new Error('Selected room is currently undergoing maintenance.');
           error.statusCode = 400;

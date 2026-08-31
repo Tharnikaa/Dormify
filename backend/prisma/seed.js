@@ -71,24 +71,32 @@ async function main() {
             description: 'Main Campus Residential Complex with modern amenities & 24/7 security',
         },
     });
-    // Block A (Men)
+    // Block A (Boys Hostel - Men's Wing)
     const blockA = await prisma.block.upsert({
         where: { hostelId_code: { hostelId: hostel.id, code: 'BLK-A' } },
-        update: {},
+        update: {
+            name: "Block A - Boys Hostel (Men's Wing)",
+            gender: 'MALE',
+        },
         create: {
             hostelId: hostel.id,
-            name: 'Block A - Men\'s Wing',
+            name: "Block A - Boys Hostel (Men's Wing)",
             code: 'BLK-A',
+            gender: 'MALE',
         },
     });
-    // Block B (Women)
+    // Block B (Girls Hostel - Women's Wing)
     const blockB = await prisma.block.upsert({
         where: { hostelId_code: { hostelId: hostel.id, code: 'BLK-B' } },
-        update: {},
+        update: {
+            name: "Block B - Girls Hostel (Women's Wing)",
+            gender: 'FEMALE',
+        },
         create: {
             hostelId: hostel.id,
-            name: 'Block B - Women\'s Wing',
+            name: "Block B - Girls Hostel (Women's Wing)",
             code: 'BLK-B',
+            gender: 'FEMALE',
         },
     });
     // Create Floors for Block A
@@ -190,9 +198,10 @@ async function main() {
                 create: {
                     rollNumber: 'STU2026001',
                     department: 'Computer Science',
-                    phone: '+1 (555) 234-5678',
+                    hostelType: 'REGULAR_NON_AC',
+                    phone: '+91 98401 23456',
                     guardianName: 'Carlos Rivera',
-                    guardianPhone: '+1 (555) 876-5432',
+                    guardianPhone: '+91 98401 87654',
                     gender: 'MALE',
                     address: '42 Campus Way, North Wing',
                 },
@@ -216,7 +225,7 @@ async function main() {
             create: {
                 applicationId: app1.id,
                 receiptNumber: 'REC-2026-001',
-                amount: 12500.0,
+                amount: 45000.0,
                 fileUrl: '/uploads/receipts/sample_receipt_1.pdf',
                 originalFilename: 'Hostel_Fee_Receipt_2026.pdf',
                 mimeType: 'application/pdf',
@@ -260,9 +269,10 @@ async function main() {
                 create: {
                     rollNumber: 'STU2026002',
                     department: 'Electrical Engineering',
-                    phone: '+1 (555) 345-6789',
+                    hostelType: 'DELUXE_NON_AC',
+                    phone: '+91 94441 34567',
                     guardianName: 'Rajesh Sharma',
-                    guardianPhone: '+1 (555) 987-6543',
+                    guardianPhone: '+91 94441 98765',
                     gender: 'FEMALE',
                     address: '88 Innovation Boulevard',
                 },
@@ -286,7 +296,7 @@ async function main() {
             create: {
                 applicationId: app2.id,
                 receiptNumber: 'REC-2026-002',
-                amount: 12500.0,
+                amount: 65000.0,
                 fileUrl: '/uploads/receipts/sample_receipt_2.pdf',
                 originalFilename: 'Priya_Hostel_Fee.pdf',
                 mimeType: 'application/pdf',
@@ -310,9 +320,10 @@ async function main() {
                 create: {
                     rollNumber: 'STU2026003',
                     department: 'Mechanical Engineering',
-                    phone: '+1 (555) 456-7890',
+                    hostelType: 'AC_SHARED',
+                    phone: '+91 97891 45678',
                     guardianName: 'David Vance',
-                    guardianPhone: '+1 (555) 876-1122',
+                    guardianPhone: '+91 97891 87611',
                     gender: 'MALE',
                     address: '15 Science Park Ave',
                 },
@@ -336,7 +347,7 @@ async function main() {
             create: {
                 applicationId: app3.id,
                 receiptNumber: 'REC-2026-003',
-                amount: 12500.0,
+                amount: 85000.0,
                 fileUrl: '/uploads/receipts/sample_receipt_3.pdf',
                 originalFilename: 'Marcus_Receipt_Copy.pdf',
                 mimeType: 'application/pdf',

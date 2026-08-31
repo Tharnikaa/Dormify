@@ -3,8 +3,9 @@ import { Hostel, Block, Floor, Room } from '../../types';
 import { api } from '../../services/api';
 import { RoomCard } from './RoomCard';
 import { BedGridModal } from './BedGridModal';
-import { Building, Layers } from 'lucide-react';
+import { Building, Layers, ShieldCheck, User } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface FloorMapProps {
   onBedAllocated?: () => void;
@@ -12,6 +13,7 @@ interface FloorMapProps {
 
 export const FloorMap: React.FC<FloorMapProps> = ({ onBedAllocated }) => {
   const { showToast } = useNotification();
+  const { user } = useAuth();
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string>('');
   const [selectedFloorNum, setSelectedFloorNum] = useState<number>(1);
@@ -19,16 +21,35 @@ export const FloorMap: React.FC<FloorMapProps> = ({ onBedAllocated }) => {
   const [loading, setLoading] = useState(true);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
 
+  const studentGender = user?.studentProfile?.gender?.toUpperCase();
+
   useEffect(() => {
     fetchBlocks();
-  }, []);
+  }, [studentGender]);
 
   const fetchBlocks = async () => {
     try {
       const res: any = await api.get('/hostels/blocks');
-      setBlocks(res.data);
-      if (res.data.length > 0) {
-        setSelectedBlockId(res.data[0].id);
+      let filtered = res.data;
+
+      // Strictly restrict visible hostel blocks based on gender for students
+      if (user?.role === 'STUDENT' && studentGender) {
+        filtered = res.data.filter((b: Block) => {
+          const bGender = (b.gender || '').toUpperCase();
+          const bName = (b.name || '').toUpperCase();
+
+          if (studentGender === 'FEMALE') {
+            return bGender === 'FEMALE' || bGender === 'GIRLS' || bName.includes('WOMEN') || bName.includes('GIRLS');
+          } else if (studentGender === 'MALE') {
+            return bGender === 'MALE' || bGender === 'BOYS' || bName.includes('MEN') || bName.includes('BOYS');
+          }
+          return true;
+        });
+      }
+
+      setBlocks(filtered);
+      if (filtered.length > 0) {
+        setSelectedBlockId(filtered[0].id);
       }
     } catch (err: any) {
       showToast(err.message || 'Failed to load hostel blocks', 'error');
@@ -69,41 +90,52 @@ export const FloorMap: React.FC<FloorMapProps> = ({ onBedAllocated }) => {
   return (
     <div>
       {/* Block & Floor Selector Toolbar */}
-      <div className="floor-controls">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Building size={16} />
-          <span className="form-label" style={{ marginBottom: 0 }}>Select Block:</span>
-          <select
-            className="form-select"
-            value={selectedBlockId}
-            onChange={(e) => {
-              setSelectedBlockId(e.target.value);
-              setSelectedFloorNum(1);
-            }}
-          >
-            {blocks.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name} ({b.hostel?.name})
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="floor-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Building size={16} />
+            <span className="form-label" style={{ marginBottom: 0 }}>Select Block:</span>
+            <select
+              className="form-select"
+              value={selectedBlockId}
+              onChange={(e) => {
+                setSelectedBlockId(e.target.value);
+                setSelectedFloorNum(1);
+              }}
+            >
+              {blocks.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name} ({b.hostel?.name})
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Layers size={16} />
-          <span className="form-label" style={{ marginBottom: 0 }}>Select Floor:</span>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {[1, 2, 3].map((fNum) => (
-              <button
-                key={fNum}
-                className={`btn btn-sm ${selectedFloorNum === fNum ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => setSelectedFloorNum(fNum)}
-              >
-                Floor {fNum}
-              </button>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Layers size={16} />
+            <span className="form-label" style={{ marginBottom: 0 }}>Select Floor:</span>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {[1, 2, 3].map((fNum) => (
+                <button
+                  key={fNum}
+                  className={`btn btn-sm ${selectedFloorNum === fNum ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setSelectedFloorNum(fNum)}
+                >
+                  Floor {fNum}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Gender Residence Badge */}
+        {user?.role === 'STUDENT' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="status-badge badge-AVAILABLE" style={{ padding: '6px 12px', fontSize: '11px' }}>
+              {studentGender === 'FEMALE' ? '👩 Girls Hostel Wing Active' : '👨 Boys Hostel Wing Active'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Interactive Floor Plan Architectural Visualizer */}

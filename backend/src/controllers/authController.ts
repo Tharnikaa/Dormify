@@ -9,7 +9,7 @@ import { logAudit } from '../utils/auditLogger';
 export class AuthController {
   static async register(req: Request, res: Response) {
     try {
-      const { name, email, password, rollNumber, department, phone, guardianName, guardianPhone, gender, address } = req.body;
+      const { name, email, password, rollNumber, department, hostelType, quota, preferredHostel, phone, guardianName, guardianPhone, gender, address } = req.body;
 
       if (!name || !email || !password || !rollNumber) {
         return ApiResponse.error(res, 'Missing required registration fields (name, email, password, rollNumber)', 400);
@@ -41,6 +41,9 @@ export class AuthController {
             create: {
               rollNumber,
               department: department || 'Computer Science & Engineering',
+              hostelType: hostelType || 'REGULAR_NON_AC',
+              quota: quota || 'TNEA',
+              preferredHostel: preferredHostel || null,
               phone: phone || '',
               guardianName: guardianName || '',
               guardianPhone: guardianPhone || '',
@@ -99,27 +102,52 @@ export class AuthController {
   static async login(req: Request, res: Response) {
     try {
       const { email, rollNumber, identifier, password } = req.body;
-      const loginKey = (identifier || email || rollNumber || '').trim();
 
-      if (!loginKey || !password) {
-        return ApiResponse.error(res, 'Roll number / Email and password are required.', 400);
+      if (!password) {
+        return ApiResponse.error(res, 'Password is required.', 400);
       }
 
-      const user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { email: loginKey.toLowerCase() },
-            { studentProfile: { rollNumber: loginKey } },
-          ],
-        },
-        include: {
-          studentProfile: true,
-          adminProfile: true,
-        },
-      });
+      let user = null;
 
-      if (!user) {
-        return ApiResponse.error(res, 'Invalid Roll Number or Email credentials.', 401);
+      // If both rollNumber and email are provided (Student 3-field login)
+      if (rollNumber && email) {
+        user = await prisma.user.findFirst({
+          where: {
+            email: email.trim().toLowerCase(),
+            studentProfile: { rollNumber: rollNumber.trim() },
+          },
+          include: {
+            studentProfile: true,
+            adminProfile: true,
+          },
+        });
+
+        if (!user) {
+          return ApiResponse.error(res, 'Invalid Roll Number or Student Email combination.', 401);
+        }
+      } else {
+        const loginKey = (identifier || email || rollNumber || '').trim();
+
+        if (!loginKey) {
+          return ApiResponse.error(res, 'Roll number or Email address is required.', 400);
+        }
+
+        user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: loginKey.toLowerCase() },
+              { studentProfile: { rollNumber: loginKey } },
+            ],
+          },
+          include: {
+            studentProfile: true,
+            adminProfile: true,
+          },
+        });
+
+        if (!user) {
+          return ApiResponse.error(res, 'Invalid Roll Number or Email credentials.', 401);
+        }
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.passwordHash);

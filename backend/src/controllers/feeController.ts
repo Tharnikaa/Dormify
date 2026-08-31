@@ -86,7 +86,7 @@ export class FeeController {
         req.user!.userId,
         'FEE_SUBMITTED',
         'FeeReceipt',
-        `Student uploaded fee receipt ${receiptNumber} ($${amount}).`,
+        `Student uploaded fee receipt ${receiptNumber} (₹${amount}).`,
         receipt.id
       );
 

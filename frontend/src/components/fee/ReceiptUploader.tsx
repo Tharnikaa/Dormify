@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
-import { UploadCloud, FileText, CheckCircle2 } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, IndianRupee } from 'lucide-react';
 
 interface ReceiptUploaderProps {
   onSuccess: () => void;
+  suggestedAmount?: number;
+  hostelTypeName?: string;
 }
 
-export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({ onSuccess }) => {
+export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
+  onSuccess,
+  suggestedAmount,
+  hostelTypeName,
+}) => {
   const { showToast } = useNotification();
   const [file, setFile] = useState<File | null>(null);
   const [receiptNumber, setReceiptNumber] = useState('');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(suggestedAmount ? String(suggestedAmount) : '');
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (suggestedAmount && !amount) {
+      setAmount(String(suggestedAmount));
+    }
+  }, [suggestedAmount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,15 +55,15 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({ onSuccess }) =
 
   return (
     <div className="swiss-card">
-      <div className="card-title" style={{ marginBottom: '16px' }}>Hostel Fee Receipt Submission</div>
+      <div className="card-title" style={{ marginBottom: '16px' }}>Hostel Fee Receipt Submission (INR)</div>
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
           <div className="form-group">
-            <label className="form-label">Receipt / Reference Number *</label>
+            <label className="form-label">Receipt / Transaction Reference Number *</label>
             <input
               type="text"
               className="form-input"
-              placeholder="e.g. REC-2026-8892"
+              placeholder="e.g. REC-2026-8892 or UTR/IMPS No."
               value={receiptNumber}
               onChange={(e) => setReceiptNumber(e.target.value)}
               required
@@ -59,12 +71,14 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({ onSuccess }) =
           </div>
 
           <div className="form-group">
-            <label className="form-label">Paid Amount ($ / Currency) *</label>
+            <label className="form-label">
+              Paid Amount in INR (₹) * {hostelTypeName ? `[Assigned: ${hostelTypeName}]` : ''}
+            </label>
             <input
               type="number"
-              step="0.01"
+              step="1"
               className="form-input"
-              placeholder="12500.00"
+              placeholder="e.g. 45000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
@@ -73,7 +87,7 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({ onSuccess }) =
         </div>
 
         <div className="form-group">
-          <label className="form-label">Upload Official Fee Document (PDF, PNG, JPEG - Max 5MB) *</label>
+          <label className="form-label">Upload Official Fee Document / Bank Challan (PDF, PNG, JPEG - Max 5MB) *</label>
           <div
             style={{
               border: '2px dashed var(--border-medium)',

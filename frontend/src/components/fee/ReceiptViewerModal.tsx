@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FeeReceipt } from '../../types';
+import { FeeReceipt, getHostelTypeDetails } from '../../types';
 import { Modal } from '../common/Modal';
 import { CheckCircle2, XCircle, FileText } from 'lucide-react';
 
@@ -24,6 +24,7 @@ export const ReceiptViewerModal: React.FC<ReceiptViewerModalProps> = ({
 
   const student = receipt.application?.student;
   const user = student?.user;
+  const hostelType = getHostelTypeDetails(student?.hostelType);
 
   const handleApprove = async () => {
     setSubmitting(true);
@@ -74,11 +75,14 @@ export const ReceiptViewerModal: React.FC<ReceiptViewerModalProps> = ({
           <div style={{ marginBottom: '4px' }}>Name: <strong>{user?.name}</strong></div>
           <div style={{ marginBottom: '4px' }}>Roll No: <strong>{student?.rollNumber}</strong></div>
           <div style={{ marginBottom: '4px' }}>Department: {student?.department}</div>
+          <div style={{ marginBottom: '4px' }}>
+            Hostel Plan: <strong style={{ color: 'var(--text-primary)' }}>{hostelType.name}</strong> ({hostelType.feeFormatted})
+          </div>
           <div style={{ marginBottom: '16px' }}>Submitted: {new Date(receipt.submissionDate).toLocaleString()}</div>
 
           <div style={{ fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Claimed Payment</div>
-          <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px' }}>
-            ${receipt.amount.toLocaleString()}
+          <div style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '16px' }}>
+            ₹{receipt.amount.toLocaleString('en-IN')}
           </div>
 
           {showRejectBox && (

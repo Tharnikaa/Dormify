@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import { FeeReceipt } from '../../types';
+import { FeeReceipt, getHostelTypeDetails } from '../../types';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { ReceiptViewerModal } from '../../components/fee/ReceiptViewerModal';
 import { useNotification } from '../../context/NotificationContext';
@@ -58,7 +58,8 @@ export const FeeVerificationPage: React.FC = () => {
                 <th>Receipt No</th>
                 <th>Student Name</th>
                 <th>Roll Number</th>
-                <th>Claimed Amount</th>
+                <th>Hostel Plan</th>
+                <th>Claimed Amount (INR)</th>
                 <th>Submission Date</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -67,12 +68,14 @@ export const FeeVerificationPage: React.FC = () => {
             <tbody>
               {receipts.map((r) => {
                 const student = r.application?.student;
+                const hostelType = getHostelTypeDetails(student?.hostelType);
                 return (
                   <tr key={r.id}>
                     <td><strong>{r.receiptNumber}</strong></td>
                     <td>{student?.user?.name}</td>
                     <td>{student?.rollNumber}</td>
-                    <td>${r.amount}</td>
+                    <td><span className="status-badge badge-AVAILABLE">{hostelType.name}</span></td>
+                    <td><strong>₹{r.amount.toLocaleString('en-IN')}</strong></td>
                     <td>{new Date(r.submissionDate).toLocaleDateString()}</td>
                     <td><StatusBadge status={r.status} /></td>
                     <td>

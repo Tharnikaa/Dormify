@@ -23,20 +23,23 @@ model User {
 }
 
 model StudentProfile {
-  id            String       @id @default(uuid())
-  userId        String       @unique
-  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rollNumber    String       @unique
-  department    String
-  phone         String
-  guardianName  String
-  guardianPhone String
-  gender        String
-  address       String
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id              String       @id @default(uuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rollNumber      String       @unique
+  department      String
+  hostelType      String       @default("REGULAR_NON_AC") // "REGULAR_NON_AC", "DELUXE_NON_AC", "AC_SHARED", "AC_SINGLE"
+  quota           String       @default("TNEA") // "TNEA", "OTHER_STATES", "NRI", "FOREIGN_NATIONALS", "FOUNDERS_QUOTA", "CONSORTIUM_OF_INDUSTRIES"
+  preferredHostel String?
+  phone           String
+  guardianName    String
+  guardianPhone   String
+  gender          String
+  address         String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  applications  Application[]
+  applications    Application[]
 }
 
 model AdminProfile {
@@ -97,6 +100,7 @@ model Block {
   hostel    Hostel   @relation(fields: [hostelId], references: [id], onDelete: Cascade)
   name      String
   code      String
+  gender    String   @default("COED") // "MALE", "FEMALE", "COED"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
