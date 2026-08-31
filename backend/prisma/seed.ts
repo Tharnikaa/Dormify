@@ -42,20 +42,22 @@ async function main() {
   });
   console.log(`[Seed] HOD User created: ${hodUser.email}`);
 
-  // 3. Create Admin User & Profile
+  // 3. Create Admin User & Profile (Mr. Ajith - Hostel Office Admin)
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@dormify.edu' },
-    update: {},
+    update: {
+      name: 'Mr. Ajith',
+    },
     create: {
       email: 'admin@dormify.edu',
       passwordHash,
       role: 'ADMIN',
-      name: 'Sarah Jenkins',
+      name: 'Mr. Ajith',
       adminProfile: {
         create: {
           employeeId: 'EMP-ADM-002',
           department: 'Hostel Administration',
-          designation: 'Senior Hostel Registrar',
+          designation: 'Hostel Office Admin',
         },
       },
     },
@@ -65,12 +67,14 @@ async function main() {
   // 4. Create Hostel Structure (Hostel -> Blocks -> Floors -> Rooms -> Beds)
   const hostel = await prisma.hostel.upsert({
     where: { code: 'GUH' },
-    update: {},
+    update: {
+      name: 'MIT Hostels',
+    },
     create: {
-      name: 'Grand University Hostel',
-      code: 'GUH',
+      name: 'MIT Hostels',
+      code: 'MITH',
       gender: 'COED',
-      description: 'Main Campus Residential Complex with modern amenities & 24/7 security',
+      description: 'Madras Institute Of Technology Residential Hostel Complex',
     },
   });
 

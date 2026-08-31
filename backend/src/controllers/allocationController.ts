@@ -167,14 +167,14 @@ export class AllocationController {
       const hostel = block.hostel;
 
       const html = PdfService.generateAllocationLetterHtml({
-        institutionName: 'GRAND UNIVERSITY RESIDENTIAL HOSTEL',
+        institutionName: 'MADRAS INSTITUTE OF TECHNOLOGY',
         academicYear: allocation.academicYear.name,
         studentName: user.name,
         rollNumber: student.rollNumber,
         department: student.department,
         gender: student.gender,
         phone: student.phone,
-        hostelName: hostel.name,
+        hostelName: hostel.name || 'MIT Hostels',
         blockName: block.name,
         floorName: floor.name,
         roomNumber: room.roomNumber,
@@ -185,7 +185,7 @@ export class AllocationController {
           day: 'numeric',
         }),
         letterRefCode: allocation.letterRefCode,
-        authorizedOfficer: 'Prof. Robert Vance',
+        authorizedOfficer: 'Mr. Ajith',
         issueTimestamp: new Date(allocation.createdAt).toLocaleDateString(),
       });
 

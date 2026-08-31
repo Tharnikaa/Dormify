@@ -60,11 +60,11 @@ export const RegisterPage: React.FC = () => {
         style={{ maxWidth: '640px', width: '100%', border: '1px solid var(--border-dark)', padding: '36px' }}
       >
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            DORMIFY
+          <div style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            MADRAS INSTITUTE OF TECHNOLOGY
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '4px' }}>
-            Student Hostel Registration
+            MIT Hostels Student Registration
           </div>
         </div>
 

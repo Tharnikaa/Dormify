@@ -56,8 +56,8 @@ export class PdfService {
       margin-bottom: 24px;
     }
     .inst-logo {
-      width: 60px;
-      height: 60px;
+      width: 64px;
+      height: 64px;
       border: 2px solid #111111;
       border-radius: 50%;
       display: flex;
@@ -81,15 +81,16 @@ export class PdfService {
     }
     .inst-subtitle {
       font-size: 12px;
-      color: #444444;
+      color: #333333;
+      font-weight: bold;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      margin-top: 2px;
+      margin-top: 3px;
       font-family: sans-serif;
     }
     .inst-address {
       font-size: 11px;
-      color: #666666;
+      color: #555555;
       margin-top: 2px;
       font-family: sans-serif;
     }
@@ -206,8 +207,8 @@ export class PdfService {
       padding-top: 16px;
     }
     .seal-box {
-      width: 110px;
-      height: 110px;
+      width: 115px;
+      height: 115px;
       border: 2px double #111111;
       border-radius: 50%;
       display: flex;
@@ -234,17 +235,18 @@ export class PdfService {
       border-top: 1px dashed #111111;
       margin-top: 45px;
       padding-top: 6px;
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 12px;
+      font-weight: bold;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
     .sig-sub {
-      font-size: 10px;
-      color: #666666;
-      margin-top: 2px;
+      font-size: 11px;
+      color: #444444;
+      margin-top: 3px;
+      font-weight: 500;
     }
-    /* Verification Hash */
+    /* Security Footnote */
     .security-hash {
       margin-top: 24px;
       padding-top: 8px;
@@ -277,13 +279,13 @@ export class PdfService {
     <!-- Header -->
     <table class="header-table">
       <tr>
-        <td style="width: 70px; vertical-align: middle;">
-          <div class="inst-logo">GU</div>
+        <td style="width: 74px; vertical-align: middle;">
+          <div class="inst-logo">MIT</div>
         </td>
         <td style="vertical-align: middle;">
-          <div class="inst-title">${data.institutionName}</div>
-          <div class="inst-subtitle">Office of the Chief Warden & Hostel Administration</div>
-          <div class="inst-address">Main University Residential Campus, University Road • Tel: +1 (555) 019-2831 • Email: warden@dormify.edu</div>
+          <div class="inst-title">MADRAS INSTITUTE OF TECHNOLOGY</div>
+          <div class="inst-subtitle">MIT Hostels • Office of Hostel Administration</div>
+          <div class="inst-address">Chromepet, Chennai, Tamil Nadu - 600044 • Tel: +91 44 2251 6000 • Email: hosteladmin@mitindia.edu</div>
         </td>
       </tr>
     </table>
@@ -299,7 +301,7 @@ export class PdfService {
     <!-- Document Title -->
     <div class="doc-title-container">
       <div class="doc-title">OFFICIAL HOSTEL ALLOCATION PERMIT</div>
-      <div class="doc-subject">Subject: Official Allotment Order for Residential Accommodation (${data.academicYear})</div>
+      <div class="doc-subject">Subject: Official Allotment Order for MIT Hostel Residence (${data.academicYear})</div>
     </div>
 
     <!-- Section 1: Student Details -->
@@ -326,7 +328,7 @@ export class PdfService {
     </table>
 
     <!-- Section 2: Allotment Details -->
-    <div class="section-title">2. Allotted Hostel Accommodation</div>
+    <div class="section-title">2. Allotted Accommodation Details</div>
     <table class="info-table">
       <tr>
         <td class="label-cell">Hostel Complex</td>
@@ -350,17 +352,17 @@ export class PdfService {
 
     <!-- Authorization Statement -->
     <div class="auth-text">
-      This is to certify that <strong>${data.studentName}</strong> (Roll No: <strong>${data.rollNumber}</strong>) has successfully fulfilled all hostel admission prerequisites and fee verifications. The competent authority hereby approves the provisional allotment of <strong>Bed ${data.bedNumber} in Room ${data.roomNumber} (${data.blockName})</strong> for the Academic Session <strong>${data.academicYear}</strong>. The resident student is authorized to report to the hostel caretaker for key assignment.
+      This is to certify that <strong>${data.studentName}</strong> (Roll No: <strong>${data.rollNumber}</strong>) has successfully fulfilled all hostel admission prerequisites and fee verifications for <strong>Madras Institute Of Technology</strong>. The competent authority hereby approves the allotment of <strong>Bed ${data.bedNumber} in Room ${data.roomNumber} (${data.blockName}, MIT Hostels)</strong> for the Academic Session <strong>${data.academicYear}</strong>. The resident student is authorized to report to the hostel caretaker for key assignment.
     </div>
 
     <!-- Rules & Regulations Box -->
     <div class="rules-box">
-      <h4>Important Regulations for Hostel Resident:</h4>
+      <h4>Important Regulations for MIT Hostel Resident:</h4>
       <ol>
         <li>This permit is strictly non-transferable and valid only for the allocated student for Academic Year ${data.academicYear}.</li>
-        <li>The student must present this original allotment permit alongside a valid University ID card upon physical check-in.</li>
+        <li>The student must present this original allotment permit alongside a valid MIT ID card upon physical check-in.</li>
         <li>Unauthorized room or bed swapping is strictly prohibited and constitutes a major disciplinary violation.</li>
-        <li>The resident must abide by all hostel rules, quiet hours, and institutional residency policies at all times.</li>
+        <li>The resident must abide by all MIT Hostel rules, quiet hours, and institutional residency policies at all times.</li>
       </ol>
     </div>
 
@@ -368,7 +370,7 @@ export class PdfService {
     <div class="footer-signatures">
       <div class="seal-box">
         ★ OFFICIAL ★<br>
-        <strong>HOSTEL REGISTRAR</strong><br>
+        <strong>MIT HOSTELS</strong><br>
         VERIFIED SEAL<br>
         2025–2026
       </div>
@@ -379,15 +381,15 @@ export class PdfService {
       </div>
 
       <div class="sig-column">
-        <div class="sig-line">${data.authorizedOfficer}</div>
-        <div class="sig-sub">Chief Hostel Warden & HOD</div>
+        <div class="sig-line">MR. AJITH</div>
+        <div class="sig-sub">Hostel Office Admin</div>
       </div>
     </div>
 
     <!-- Security Footnote -->
     <div class="security-hash">
       <span>DOC REF: ${data.letterRefCode}</span>
-      <span>SYSTEM VERIFIED • OFFICIAL RESIDENTIAL ALLOCATION PERMIT</span>
+      <span>MADRAS INSTITUTE OF TECHNOLOGY • MIT HOSTELS OFFICIAL PERMIT</span>
     </div>
   </div>
 

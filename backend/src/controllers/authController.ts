@@ -98,14 +98,20 @@ export class AuthController {
 
   static async login(req: Request, res: Response) {
     try {
-      const { email, password } = req.body;
+      const { email, rollNumber, identifier, password } = req.body;
+      const loginKey = (identifier || email || rollNumber || '').trim();
 
-      if (!email || !password) {
-        return ApiResponse.error(res, 'Email and password are required.', 400);
+      if (!loginKey || !password) {
+        return ApiResponse.error(res, 'Roll number / Email and password are required.', 400);
       }
 
-      const user = await prisma.user.findUnique({
-        where: { email: email.toLowerCase() },
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: loginKey.toLowerCase() },
+            { studentProfile: { rollNumber: loginKey } },
+          ],
+        },
         include: {
           studentProfile: true,
           adminProfile: true,
@@ -113,7 +119,7 @@ export class AuthController {
       });
 
       if (!user) {
-        return ApiResponse.error(res, 'Invalid email credentials.', 401);
+        return ApiResponse.error(res, 'Invalid Roll Number or Email credentials.', 401);
       }
 
       const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
