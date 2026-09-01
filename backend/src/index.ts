@@ -21,7 +21,17 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static uploaded files (receipts)
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 
-// Healthcheck endpoint
+// Root and Healthcheck endpoints
+app.get('/', (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'DORMIFY Backend API',
+    documentation: '/api',
+    health: '/api/health',
+    timestamp: new Date(),
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'DORMIFY Hostel Administration API', timestamp: new Date() });
 });
