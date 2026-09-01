@@ -43,9 +43,12 @@
 | :--- | :--- | :--- | :--- |
 | **HOD** | `hod.cs@dormify.edu` | `Password123!` | Chief Warden & HOD Computer Science |
 | **Admin** | `admin@dormify.edu` | `Password123!` | Senior Hostel Registrar |
-| **Student 1** | `alex.rivera@student.dormify.edu` | `Password123!` | Roll: `STU2026001` (Bed Allocated) |
-| **Student 2** | `priya.sharma@student.dormify.edu` | `Password123!` | Roll: `STU2026002` (Fee Verified, Ready for Room Selection) |
-| **Student 3** | `marcus.vance@student.dormify.edu` | `Password123!` | Roll: `STU2026003` (Fee Submitted, Pending Review) |
+| **Student 1** | `alex.rivera@student.dormify.edu` | `Password123!` | Roll: `STU2026001` (Bed Allocated - Orchid) |
+| **Student 2** | `priya.sharma@student.dormify.edu` | `Password123!` | Roll: `STU2026002` (Fee Verified - Rajam NRI) |
+| **Student 3** | `marcus.vance@student.dormify.edu` | `Password123!` | Roll: `STU2026003` (Fee Submitted, Pending Review - Birla) |
+| **Student 4** | `kavya.nair@student.dormify.edu` | `Password123!` | Roll: `STU2026004` (Fee Verified, Ready for Room Selection - Vaigai) |
+| **Student 5** | `ananya.deshmukh@student.dormify.edu` | `Password123!` | Roll: `STU2026005` (Fee Verified, Ready for Room Selection - Ponni) |
+| **Student 6** | `sneha.patel@student.dormify.edu` | `Password123!` | Roll: `STU2026006` (Fee Verified, Ready for Room Selection - Cauvery) |
 
 ---
 

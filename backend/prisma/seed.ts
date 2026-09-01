@@ -86,7 +86,7 @@ async function main() {
   const girlsHostels = [
     { name: 'Rajam NRI', code: 'RAJAM_NRI' },
     { name: 'Ponni', code: 'PONNI' },
-    { name: 'Kaveri', code: 'KAVERI' },
+    { name: 'Cauvery', code: 'CAUVERY' },
     { name: 'Vaigai', code: 'VAIGAI' },
   ];
 
@@ -193,6 +193,117 @@ async function main() {
             update: {},
             create: { roomId: room.id, bedNumber: 'A', status: 'AVAILABLE' },
           });
+        }
+      }
+    } else if (gh.code === 'VAIGAI') {
+      // Vaigai Hostel Architectural Layout: 2 Floors (1st & 2nd), 27 rooms per floor facing opposite each other
+      const floorsConfig = [
+        { floorNum: 1, prefix: '1' },
+        { floorNum: 2, prefix: '2' },
+      ];
+
+      for (const fc of floorsConfig) {
+        const flr = await prisma.floor.upsert({
+          where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fc.floorNum } },
+          update: {},
+          create: { blockId: blk.id, floorNumber: fc.floorNum, name: `Floor ${fc.floorNum}` },
+        });
+
+        // 27 rooms per floor: VAI-101 to VAI-127 (Floor 1) and VAI-201 to VAI-227 (Floor 2)
+        // 5 occupants per room: Beds A, B, C, D, E (Capacity 5, 5-Sharing)
+        // Opposite-facing corridor layout: Wing A (1-14) facing Wing B (15-27)
+        for (let num = 1; num <= 27; num++) {
+          const roomSuffix = num < 10 ? `0${num}` : `${num}`;
+          const roomNum = `VAI-${fc.prefix}${roomSuffix}`;
+
+          const room = await prisma.room.upsert({
+            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
+            update: { capacity: 5, roomType: '5-SHARING' },
+            create: { floorId: flr.id, roomNumber: roomNum, capacity: 5, roomType: '5-SHARING', status: 'AVAILABLE' },
+          });
+
+          for (const bLetter of ['A', 'B', 'C', 'D', 'E']) {
+            await prisma.bed.upsert({
+              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
+              update: {},
+              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+            });
+          }
+        }
+      }
+    } else if (gh.code === 'PONNI') {
+      // Ponni Hostel Architectural Layout: 3 Floors (Ground, 1st & 2nd), 29 rooms per floor (4 girls per room)
+      // Rectangular Quad Perimeter Layout surrounding central open courtyard
+      const floorsConfig = [
+        { floorNum: 0, name: 'Ground Floor', prefix: 'G' },
+        { floorNum: 1, name: 'First Floor', prefix: '1' },
+        { floorNum: 2, name: 'Second Floor', prefix: '2' },
+      ];
+
+      for (const fc of floorsConfig) {
+        const flr = await prisma.floor.upsert({
+          where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fc.floorNum } },
+          update: { name: fc.name },
+          create: { blockId: blk.id, floorNumber: fc.floorNum, name: fc.name },
+        });
+
+        // 29 rooms per floor: PON-G01 to PON-G29, PON-101 to PON-129, PON-201 to PON-229
+        // 4 girls per room: Beds A, B, C, D (Capacity 4, 4-Sharing)
+        // Rectangular quad perimeter wings: North (1-8), East (9-15), South (16-23), West (24-29)
+        for (let num = 1; num <= 29; num++) {
+          const roomSuffix = num < 10 ? `0${num}` : `${num}`;
+          const roomNum = `PON-${fc.prefix}${roomSuffix}`;
+
+          const room = await prisma.room.upsert({
+            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
+            update: { capacity: 4, roomType: '4-SHARING' },
+            create: { floorId: flr.id, roomNumber: roomNum, capacity: 4, roomType: '4-SHARING', status: 'AVAILABLE' },
+          });
+
+          for (const bLetter of ['A', 'B', 'C', 'D']) {
+            await prisma.bed.upsert({
+              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
+              update: {},
+              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+            });
+          }
+        }
+      }
+    } else if (gh.code === 'CAUVERY' || gh.code === 'KAVERI') {
+      // Cauvery Hostel Architectural Layout: 4 Floors (Ground, 1st, 2nd & 3rd), 29 rooms per floor (4 persons per room)
+      const floorsConfig = [
+        { floorNum: 0, name: 'Ground Floor', prefix: 'G' },
+        { floorNum: 1, name: 'First Floor', prefix: '1' },
+        { floorNum: 2, name: 'Second Floor', prefix: '2' },
+        { floorNum: 3, name: 'Third Floor', prefix: '3' },
+      ];
+
+      for (const fc of floorsConfig) {
+        const flr = await prisma.floor.upsert({
+          where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fc.floorNum } },
+          update: { name: fc.name },
+          create: { blockId: blk.id, floorNumber: fc.floorNum, name: fc.name },
+        });
+
+        // 29 rooms per floor: CAU-G01 to CAU-G29, CAU-101 to CAU-129, CAU-201 to CAU-229, CAU-301 to CAU-329
+        // 4 occupants per room: Beds A, B, C, D (Capacity 4, 4-Sharing)
+        for (let num = 1; num <= 29; num++) {
+          const roomSuffix = num < 10 ? `0${num}` : `${num}`;
+          const roomNum = `CAU-${fc.prefix}${roomSuffix}`;
+
+          const room = await prisma.room.upsert({
+            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
+            update: { capacity: 4, roomType: '4-SHARING' },
+            create: { floorId: flr.id, roomNumber: roomNum, capacity: 4, roomType: '4-SHARING', status: 'AVAILABLE' },
+          });
+
+          for (const bLetter of ['A', 'B', 'C', 'D']) {
+            await prisma.bed.upsert({
+              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
+              update: {},
+              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+            });
+          }
         }
       }
     } else {
@@ -416,6 +527,180 @@ async function main() {
         mimeType: 'application/pdf',
         fileSize: 310000,
         status: 'PENDING',
+      },
+    });
+  }
+
+  // Student 4: Fee Verified (Kavya Nair - 1st Year, Vaigai Residence)
+  const user4 = await prisma.user.upsert({
+    where: { email: 'kavya.nair@student.dormify.edu' },
+    update: {},
+    create: {
+      email: 'kavya.nair@student.dormify.edu',
+      passwordHash,
+      role: 'STUDENT',
+      name: 'Kavya Nair',
+      studentProfile: {
+        create: {
+          rollNumber: 'STU2026004',
+          department: 'Information Technology',
+          yearOfStudy: 1,
+          preferredHostel: 'VAIGAI',
+          totalFeePaid: 47197.0,
+          remainingFeeDue: 0,
+          quota: 'TNEA',
+          phone: '+91 98402 77889',
+          guardianName: 'Suresh Nair',
+          guardianPhone: '+91 98402 11223',
+          gender: 'FEMALE',
+          address: '24 Green Meadows, Anna Nagar',
+        },
+      },
+    },
+    include: { studentProfile: true },
+  });
+
+  if (user4.studentProfile) {
+    const app4 = await prisma.application.upsert({
+      where: { studentId_academicYearId: { studentId: user4.studentProfile.id, academicYearId: academicYear.id } },
+      update: {},
+      create: {
+        studentId: user4.studentProfile.id,
+        academicYearId: academicYear.id,
+        status: 'FEE_VERIFIED',
+      },
+    });
+
+    await prisma.feeReceipt.upsert({
+      where: { applicationId: app4.id },
+      update: {},
+      create: {
+        applicationId: app4.id,
+        receiptNumber: 'REC-2026-004',
+        amount: 47197.0,
+        fileUrl: '/uploads/receipts/sample_receipt_4.pdf',
+        originalFilename: 'Kavya_Vaigai_Receipt.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 220000,
+        status: 'APPROVED',
+        verificationDate: new Date(),
+        reviewerAdminId: adminUser.id,
+      },
+    });
+  }
+
+  // Student 5: Fee Verified (Ananya Deshmukh - 1st Year, Ponni Residence)
+  const user5 = await prisma.user.upsert({
+    where: { email: 'ananya.deshmukh@student.dormify.edu' },
+    update: {},
+    create: {
+      email: 'ananya.deshmukh@student.dormify.edu',
+      passwordHash,
+      role: 'STUDENT',
+      name: 'Ananya Deshmukh',
+      studentProfile: {
+        create: {
+          rollNumber: 'STU2026005',
+          department: 'Electronics & Communication',
+          yearOfStudy: 1,
+          preferredHostel: 'PONNI',
+          totalFeePaid: 47197.0,
+          remainingFeeDue: 0,
+          quota: 'TNEA',
+          phone: '+91 98403 66778',
+          guardianName: 'Vikram Deshmukh',
+          guardianPhone: '+91 98403 99887',
+          gender: 'FEMALE',
+          address: '56 Lake View Road, Adyar',
+        },
+      },
+    },
+    include: { studentProfile: true },
+  });
+
+  if (user5.studentProfile) {
+    const app5 = await prisma.application.upsert({
+      where: { studentId_academicYearId: { studentId: user5.studentProfile.id, academicYearId: academicYear.id } },
+      update: {},
+      create: {
+        studentId: user5.studentProfile.id,
+        academicYearId: academicYear.id,
+        status: 'FEE_VERIFIED',
+      },
+    });
+
+    await prisma.feeReceipt.upsert({
+      where: { applicationId: app5.id },
+      update: {},
+      create: {
+        applicationId: app5.id,
+        receiptNumber: 'REC-2026-005',
+        amount: 47197.0,
+        fileUrl: '/uploads/receipts/sample_receipt_5.pdf',
+        originalFilename: 'Ananya_Ponni_Receipt.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 215000,
+        status: 'APPROVED',
+        verificationDate: new Date(),
+        reviewerAdminId: adminUser.id,
+      },
+    });
+  }
+
+  // Student 6: Fee Verified (Sneha Patel - 1st Year, Cauvery Residence)
+  const user6 = await prisma.user.upsert({
+    where: { email: 'sneha.patel@student.dormify.edu' },
+    update: {},
+    create: {
+      email: 'sneha.patel@student.dormify.edu',
+      passwordHash,
+      role: 'STUDENT',
+      name: 'Sneha Patel',
+      studentProfile: {
+        create: {
+          rollNumber: 'STU2026006',
+          department: 'Chemical Engineering',
+          yearOfStudy: 1,
+          preferredHostel: 'CAUVERY',
+          totalFeePaid: 47197.0,
+          remainingFeeDue: 0,
+          quota: 'TNEA',
+          phone: '+91 98404 11335',
+          guardianName: 'Manoj Patel',
+          guardianPhone: '+91 98404 99771',
+          gender: 'FEMALE',
+          address: '77 Riverfront Road, Guindy',
+        },
+      },
+    },
+    include: { studentProfile: true },
+  });
+
+  if (user6.studentProfile) {
+    const app6 = await prisma.application.upsert({
+      where: { studentId_academicYearId: { studentId: user6.studentProfile.id, academicYearId: academicYear.id } },
+      update: {},
+      create: {
+        studentId: user6.studentProfile.id,
+        academicYearId: academicYear.id,
+        status: 'FEE_VERIFIED',
+      },
+    });
+
+    await prisma.feeReceipt.upsert({
+      where: { applicationId: app6.id },
+      update: {},
+      create: {
+        applicationId: app6.id,
+        receiptNumber: 'REC-2026-006',
+        amount: 47197.0,
+        fileUrl: '/uploads/receipts/sample_receipt_6.pdf',
+        originalFilename: 'Sneha_Cauvery_Receipt.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 210000,
+        status: 'APPROVED',
+        verificationDate: new Date(),
+        reviewerAdminId: adminUser.id,
       },
     });
   }

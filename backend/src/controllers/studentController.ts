@@ -303,7 +303,7 @@ export class StudentController {
       }
 
       const boysHostels = ['ORCHID', 'BIRLA', 'BHAVANI', 'KURINJI', 'MARUDHAM', 'THAMIRA', 'AMARAVATHI'];
-      const girlsHostels = ['RAJAM_NRI', 'PONNI', 'KAVERI', 'VAIGAI'];
+      const girlsHostels = ['RAJAM_NRI', 'PONNI', 'KAVERI', 'CAUVERY', 'VAIGAI'];
 
       if (student.gender === 'MALE' && girlsHostels.includes(preferredHostel)) {
         return ApiResponse.error(res, 'Male students cannot be assigned to Girls Hostels.', 400);
@@ -396,7 +396,7 @@ export class StudentController {
       }
 
       const boysHostels = ['ORCHID', 'BIRLA', 'BHAVANI', 'KURINJI', 'MARUDHAM', 'THAMIRA', 'AMARAVATHI'];
-      const girlsHostels = ['RAJAM_NRI', 'PONNI', 'KAVERI', 'VAIGAI'];
+      const girlsHostels = ['RAJAM_NRI', 'PONNI', 'KAVERI', 'CAUVERY', 'VAIGAI'];
 
       if (gender === 'MALE' && girlsHostels.includes(toHostel)) {
         return ApiResponse.error(res, 'Male students cannot be batch shifted to Girls Hostels.', 400);

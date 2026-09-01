@@ -15,8 +15,9 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.8",
-    "@prisma/client": "^5.22.0",
     "@prisma/adapter-pg": "^5.22.0",
+    "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.112.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

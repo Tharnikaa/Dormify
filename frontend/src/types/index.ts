@@ -139,9 +139,9 @@ export const BOYS_HOSTELS: HostelOption[] = [
 
 export const GIRLS_HOSTELS: HostelOption[] = [
   { id: 'RAJAM_NRI', name: 'Rajam NRI', fee: 107084, feeFormatted: '₹1,07,084', features: 'Air Conditioned • Premier NRI Complex' },
-  { id: 'PONNI', name: 'Ponni', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • Courtyard View' },
-  { id: 'KAVERI', name: 'Kaveri', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • High-Speed Wi-Fi' },
-  { id: 'VAIGAI', name: 'Vaigai', fee: 47197, feeFormatted: '₹47,197', features: 'General Residence • Garden Proximity' },
+  { id: 'PONNI', name: 'Ponni', fee: 47197, feeFormatted: '₹47,197', features: '4-Sharing Quad Residence • Central Courtyard' },
+  { id: 'CAUVERY', name: 'Cauvery', fee: 47197, feeFormatted: '₹47,197', features: '4-Sharing Quad Residence • High-Speed Wi-Fi' },
+  { id: 'VAIGAI', name: 'Vaigai', fee: 47197, feeFormatted: '₹47,197', features: '5-Sharing Residence • Garden Proximity' },
 ];
 
 export const getHostelPreferenceDetails = (gender: string, hostelId?: string, year: number = 1): HostelOption => {

@@ -9,8 +9,9 @@ import { errorHandler } from './middleware/errorMiddleware';
 const app = express();
 
 // Middleware
+const allowedOrigins = env.FRONTEND_URL ? [env.FRONTEND_URL, 'http://localhost:5173'] : true;
 app.use(cors({
-  origin: env.FRONTEND_URL || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
 }));
 
