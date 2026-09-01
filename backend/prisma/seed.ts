@@ -111,22 +111,31 @@ async function main() {
         create: { blockId: blk.id, floorNumber: fNum, name: `Floor ${fNum}` },
       });
 
+      const roomsToCreate = [];
       for (let r = 1; r <= 4; r++) {
         const roomNum = `${bh.code.substring(0, 3)}-${fNum}0${r}`;
-        const room = await prisma.room.upsert({
-          where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
-          update: {},
-          create: { floorId: flr.id, roomNumber: roomNum, capacity: 2, roomType: 'DOUBLE', status: 'AVAILABLE' },
+        roomsToCreate.push({
+          floorId: flr.id,
+          roomNumber: roomNum,
+          capacity: 2,
+          roomType: 'DOUBLE',
+          status: 'AVAILABLE',
         });
+      }
+      await prisma.room.createMany({ data: roomsToCreate, skipDuplicates: true });
 
+      const createdRooms = await prisma.room.findMany({ where: { floorId: flr.id } });
+      const bedsToCreate = [];
+      for (const room of createdRooms) {
         for (const bLetter of ['A', 'B']) {
-          await prisma.bed.upsert({
-            where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
-            update: {},
-            create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+          bedsToCreate.push({
+            roomId: room.id,
+            bedNumber: bLetter,
+            status: 'AVAILABLE',
           });
         }
       }
+      await prisma.bed.createMany({ data: bedsToCreate, skipDuplicates: true });
     }
   }
 
@@ -144,7 +153,6 @@ async function main() {
       create: { hostelId: h.id, name: gh.name, code: `BLK-${gh.code}`, gender: 'FEMALE' },
     });
 
-    // Special exact architectural layout for Rajam NRI Hostel
     if (gh.code === 'RAJAM_NRI') {
       const floorsConfig = [
         { floorNum: 1, prefix: '21' },
@@ -158,45 +166,43 @@ async function main() {
           create: { blockId: blk.id, floorNumber: fc.floorNum, name: `Floor ${fc.floorNum}` },
         });
 
-        // Double Occupancy Rooms: 2101-2111 (Floor 1) and 2201-2211 (Floor 2)
+        const roomsToCreate = [];
         for (let num = 1; num <= 11; num++) {
           const roomSuffix = num < 10 ? `0${num}` : `${num}`;
-          const roomNum = `${fc.prefix}${roomSuffix}`;
-
-          const room = await prisma.room.upsert({
-            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
-            update: { capacity: 2, roomType: 'DOUBLE' },
-            create: { floorId: flr.id, roomNumber: roomNum, capacity: 2, roomType: 'DOUBLE', status: 'AVAILABLE' },
+          roomsToCreate.push({
+            floorId: flr.id,
+            roomNumber: `${fc.prefix}${roomSuffix}`,
+            capacity: 2,
+            roomType: 'DOUBLE',
+            status: 'AVAILABLE',
           });
+        }
+        for (let num = 12; num <= 21; num++) {
+          roomsToCreate.push({
+            floorId: flr.id,
+            roomNumber: `${fc.prefix}${num}`,
+            capacity: 1,
+            roomType: 'SINGLE',
+            status: 'AVAILABLE',
+          });
+        }
+        await prisma.room.createMany({ data: roomsToCreate, skipDuplicates: true });
 
-          for (const bLetter of ['A', 'B']) {
-            await prisma.bed.upsert({
-              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
-              update: {},
-              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+        const createdRooms = await prisma.room.findMany({ where: { floorId: flr.id } });
+        const bedsToCreate = [];
+        for (const room of createdRooms) {
+          const letters = room.capacity === 1 ? ['A'] : ['A', 'B'];
+          for (const bLetter of letters) {
+            bedsToCreate.push({
+              roomId: room.id,
+              bedNumber: bLetter,
+              status: 'AVAILABLE',
             });
           }
         }
-
-        // Single Occupancy Rooms: 2112-2121 (Floor 1) and 2212-2221 (Floor 2)
-        for (let num = 12; num <= 21; num++) {
-          const roomNum = `${fc.prefix}${num}`;
-
-          const room = await prisma.room.upsert({
-            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
-            update: { capacity: 1, roomType: 'SINGLE' },
-            create: { floorId: flr.id, roomNumber: roomNum, capacity: 1, roomType: 'SINGLE', status: 'AVAILABLE' },
-          });
-
-          await prisma.bed.upsert({
-            where: { roomId_bedNumber: { roomId: room.id, bedNumber: 'A' } },
-            update: {},
-            create: { roomId: room.id, bedNumber: 'A', status: 'AVAILABLE' },
-          });
-        }
+        await prisma.bed.createMany({ data: bedsToCreate, skipDuplicates: true });
       }
     } else if (gh.code === 'VAIGAI') {
-      // Vaigai Hostel Architectural Layout: 2 Floors (1st & 2nd), 27 rooms per floor facing opposite each other
       const floorsConfig = [
         { floorNum: 1, prefix: '1' },
         { floorNum: 2, prefix: '2' },
@@ -209,31 +215,33 @@ async function main() {
           create: { blockId: blk.id, floorNumber: fc.floorNum, name: `Floor ${fc.floorNum}` },
         });
 
-        // 27 rooms per floor: VAI-101 to VAI-127 (Floor 1) and VAI-201 to VAI-227 (Floor 2)
-        // 5 occupants per room: Beds A, B, C, D, E (Capacity 5, 5-Sharing)
-        // Opposite-facing corridor layout: Wing A (1-14) facing Wing B (15-27)
+        const roomsToCreate = [];
         for (let num = 1; num <= 27; num++) {
           const roomSuffix = num < 10 ? `0${num}` : `${num}`;
-          const roomNum = `VAI-${fc.prefix}${roomSuffix}`;
-
-          const room = await prisma.room.upsert({
-            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
-            update: { capacity: 5, roomType: '5-SHARING' },
-            create: { floorId: flr.id, roomNumber: roomNum, capacity: 5, roomType: '5-SHARING', status: 'AVAILABLE' },
+          roomsToCreate.push({
+            floorId: flr.id,
+            roomNumber: `VAI-${fc.prefix}${roomSuffix}`,
+            capacity: 5,
+            roomType: '5-SHARING',
+            status: 'AVAILABLE',
           });
+        }
+        await prisma.room.createMany({ data: roomsToCreate, skipDuplicates: true });
 
+        const createdRooms = await prisma.room.findMany({ where: { floorId: flr.id } });
+        const bedsToCreate = [];
+        for (const room of createdRooms) {
           for (const bLetter of ['A', 'B', 'C', 'D', 'E']) {
-            await prisma.bed.upsert({
-              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
-              update: {},
-              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+            bedsToCreate.push({
+              roomId: room.id,
+              bedNumber: bLetter,
+              status: 'AVAILABLE',
             });
           }
         }
+        await prisma.bed.createMany({ data: bedsToCreate, skipDuplicates: true });
       }
     } else if (gh.code === 'PONNI') {
-      // Ponni Hostel Architectural Layout: 3 Floors (Ground, 1st & 2nd), 29 rooms per floor (4 girls per room)
-      // Rectangular Quad Perimeter Layout surrounding central open courtyard
       const floorsConfig = [
         { floorNum: 0, name: 'Ground Floor', prefix: 'G' },
         { floorNum: 1, name: 'First Floor', prefix: '1' },
@@ -247,30 +255,33 @@ async function main() {
           create: { blockId: blk.id, floorNumber: fc.floorNum, name: fc.name },
         });
 
-        // 29 rooms per floor: PON-G01 to PON-G29, PON-101 to PON-129, PON-201 to PON-229
-        // 4 girls per room: Beds A, B, C, D (Capacity 4, 4-Sharing)
-        // Rectangular quad perimeter wings: North (1-8), East (9-15), South (16-23), West (24-29)
+        const roomsToCreate = [];
         for (let num = 1; num <= 29; num++) {
           const roomSuffix = num < 10 ? `0${num}` : `${num}`;
-          const roomNum = `PON-${fc.prefix}${roomSuffix}`;
-
-          const room = await prisma.room.upsert({
-            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
-            update: { capacity: 4, roomType: '4-SHARING' },
-            create: { floorId: flr.id, roomNumber: roomNum, capacity: 4, roomType: '4-SHARING', status: 'AVAILABLE' },
+          roomsToCreate.push({
+            floorId: flr.id,
+            roomNumber: `PON-${fc.prefix}${roomSuffix}`,
+            capacity: 4,
+            roomType: '4-SHARING',
+            status: 'AVAILABLE',
           });
+        }
+        await prisma.room.createMany({ data: roomsToCreate, skipDuplicates: true });
 
+        const createdRooms = await prisma.room.findMany({ where: { floorId: flr.id } });
+        const bedsToCreate = [];
+        for (const room of createdRooms) {
           for (const bLetter of ['A', 'B', 'C', 'D']) {
-            await prisma.bed.upsert({
-              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
-              update: {},
-              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+            bedsToCreate.push({
+              roomId: room.id,
+              bedNumber: bLetter,
+              status: 'AVAILABLE',
             });
           }
         }
+        await prisma.bed.createMany({ data: bedsToCreate, skipDuplicates: true });
       }
     } else if (gh.code === 'CAUVERY' || gh.code === 'KAVERI') {
-      // Cauvery Hostel Architectural Layout: 4 Floors (Ground, 1st, 2nd & 3rd), 29 rooms per floor (4 persons per room)
       const floorsConfig = [
         { floorNum: 0, name: 'Ground Floor', prefix: 'G' },
         { floorNum: 1, name: 'First Floor', prefix: '1' },
@@ -285,52 +296,31 @@ async function main() {
           create: { blockId: blk.id, floorNumber: fc.floorNum, name: fc.name },
         });
 
-        // 29 rooms per floor: CAU-G01 to CAU-G29, CAU-101 to CAU-129, CAU-201 to CAU-229, CAU-301 to CAU-329
-        // 4 occupants per room: Beds A, B, C, D (Capacity 4, 4-Sharing)
+        const roomsToCreate = [];
         for (let num = 1; num <= 29; num++) {
           const roomSuffix = num < 10 ? `0${num}` : `${num}`;
-          const roomNum = `CAU-${fc.prefix}${roomSuffix}`;
-
-          const room = await prisma.room.upsert({
-            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
-            update: { capacity: 4, roomType: '4-SHARING' },
-            create: { floorId: flr.id, roomNumber: roomNum, capacity: 4, roomType: '4-SHARING', status: 'AVAILABLE' },
+          roomsToCreate.push({
+            floorId: flr.id,
+            roomNumber: `CAU-${fc.prefix}${roomSuffix}`,
+            capacity: 4,
+            roomType: '4-SHARING',
+            status: 'AVAILABLE',
           });
+        }
+        await prisma.room.createMany({ data: roomsToCreate, skipDuplicates: true });
 
+        const createdRooms = await prisma.room.findMany({ where: { floorId: flr.id } });
+        const bedsToCreate = [];
+        for (const room of createdRooms) {
           for (const bLetter of ['A', 'B', 'C', 'D']) {
-            await prisma.bed.upsert({
-              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
-              update: {},
-              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
+            bedsToCreate.push({
+              roomId: room.id,
+              bedNumber: bLetter,
+              status: 'AVAILABLE',
             });
           }
         }
-      }
-    } else {
-      // Standard 3 floors for other girls residences
-      for (let fNum = 1; fNum <= 3; fNum++) {
-        const flr = await prisma.floor.upsert({
-          where: { blockId_floorNumber: { blockId: blk.id, floorNumber: fNum } },
-          update: {},
-          create: { blockId: blk.id, floorNumber: fNum, name: `Floor ${fNum}` },
-        });
-
-        for (let r = 1; r <= 4; r++) {
-          const roomNum = `${gh.code.substring(0, 3)}-${fNum}0${r}`;
-          const room = await prisma.room.upsert({
-            where: { floorId_roomNumber: { floorId: flr.id, roomNumber: roomNum } },
-            update: {},
-            create: { floorId: flr.id, roomNumber: roomNum, capacity: 2, roomType: 'DOUBLE', status: 'AVAILABLE' },
-          });
-
-          for (const bLetter of ['A', 'B']) {
-            await prisma.bed.upsert({
-              where: { roomId_bedNumber: { roomId: room.id, bedNumber: bLetter } },
-              update: {},
-              create: { roomId: room.id, bedNumber: bLetter, status: 'AVAILABLE' },
-            });
-          }
-        }
+        await prisma.bed.createMany({ data: bedsToCreate, skipDuplicates: true });
       }
     }
   }
