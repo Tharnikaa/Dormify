@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/db';
 import { ApiResponse } from '../utils/apiResponse';
-import { storageProvider } from '../services/storage/localStorageProvider';
+import { supabaseStorageProvider as storageProvider } from '../services/storage/supabaseStorageProvider';
 import { logAudit } from '../utils/auditLogger';
 import { NotificationService } from '../services/notificationService';
 
