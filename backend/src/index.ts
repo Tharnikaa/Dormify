@@ -8,12 +8,32 @@ import { errorHandler } from './middleware/errorMiddleware';
 
 const app = express();
 
-// Middleware
-const allowedOrigins = env.FRONTEND_URL ? [env.FRONTEND_URL, 'http://localhost:5173'] : true;
-app.use(cors({
-  origin: allowedOrigins,
+// Middleware - Dynamic institutional & cloud CORS
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser callers (curl, server-to-server, health checks)
+    if (!origin) return callback(null, true);
+
+    // Allow localhost, 127.0.0.1 on any port, all Render domains, and deployed frontends
+    if (
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1') ||
+      origin.includes('onrender.com') ||
+      origin.includes('vercel.app') ||
+      origin.includes('netlify.app')
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(null, true);
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -44,7 +44,10 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+    let message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+    if (message === 'Network Error') {
+      message = 'Network Error: Unable to reach backend server. If using Render free tier, the server may be waking up from sleep (takes ~45s). Please retry in a moment.';
+    }
     const customError = new Error(message) as any;
     customError.statusCode = error.response?.status;
     customError.response = error.response;
