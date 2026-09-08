@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { api } from '../../services/api';
 import { HOSTEL_TYPES, getHostelTypeDetails, ADMISSION_QUOTAS, BOYS_HOSTELS, GIRLS_HOSTELS, getHostelPreferenceDetails } from '../../types';
-import { UserPlus, Building, Sparkles, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { UserPlus, Building, Sparkles, CheckCircle2, ShieldAlert, AlertCircle } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,11 +28,13 @@ export const RegisterPage: React.FC = () => {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const selectedHostelDetails = getHostelPreferenceDetails(formData.gender, formData.preferredHostel);
   const availableHostels = formData.gender === 'FEMALE' ? GIRLS_HOSTELS : BOYS_HOSTELS;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setErrorMessage(null);
     const { name, value } = e.target;
     if (name === 'gender') {
       const defaultHostel = value === 'FEMALE' ? GIRLS_HOSTELS[0].id : BOYS_HOSTELS[0].id;
@@ -44,14 +46,24 @@ export const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     setSubmitting(true);
     try {
       const res: any = await api.post('/auth/register', formData);
-      login(res.data.token, res.data.user);
+      const token = res.data?.token || res.token;
+      const user = res.data?.user || res.user;
+
+      if (!token || !user) {
+        throw new Error(res.message || 'Registration succeeded but session token was not returned.');
+      }
+
+      login(token, user);
       showToast('Registration successful! Profile and fee allocation initialized.', 'success');
       navigate('/student/dashboard');
     } catch (err: any) {
-      showToast(err.message || 'Registration failed', 'error');
+      const msg = err.message || 'Registration failed. Please check your form entries or network connection.';
+      setErrorMessage(msg);
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -80,6 +92,27 @@ export const RegisterPage: React.FC = () => {
             MIT Hostels Student Registration & Fee Assignment
           </div>
         </div>
+
+        {errorMessage && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '12px 14px',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #F87171',
+              borderRadius: '4px',
+              color: '#991B1B',
+              fontSize: '12px',
+              fontWeight: 600,
+              marginBottom: '20px',
+            }}
+          >
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>

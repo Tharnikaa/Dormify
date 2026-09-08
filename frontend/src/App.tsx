@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ToastContainer } from './components/common/ToastContainer';
 import { AppLayout } from './layouts/AppLayout';
 
 import { LoginPage } from './pages/auth/LoginPage';
@@ -48,6 +49,7 @@ export const App: React.FC = () => {
     <BrowserRouter>
       <AuthProvider>
         <NotificationProvider>
+          <ToastContainer />
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<LoginPage />} />

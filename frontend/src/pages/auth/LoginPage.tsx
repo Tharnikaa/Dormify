@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { api } from '../../services/api';
-import { LogIn, GraduationCap, ShieldCheck, UserCheck, KeyRound } from 'lucide-react';
+import { LogIn, GraduationCap, ShieldCheck, UserCheck, KeyRound, AlertCircle } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,9 +14,11 @@ export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleTabChange = (tab: 'student' | 'admin') => {
     setActiveTab(tab);
+    setErrorMessage(null);
     setRollNumber('');
     setEmail('');
     setPassword('');
@@ -24,33 +26,49 @@ export const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     setSubmitting(true);
     try {
       const payload = activeTab === 'student' 
-        ? { rollNumber, email, password } 
-        : { email, identifier: email, password };
+        ? { rollNumber: rollNumber.trim(), email: email.trim(), password } 
+        : { email: email.trim(), identifier: email.trim(), password };
 
       const res: any = await api.post('/auth/login', payload);
-      login(res.data.token, res.data.user);
-      showToast(`Welcome back, ${res.data.user.name}!`, 'success');
+      const token = res.data?.token || res.token;
+      const user = res.data?.user || res.user;
 
-      if (res.data.user.role === 'STUDENT') {
+      if (!token || !user) {
+        throw new Error(res.message || 'Authentication succeeded but token or user details were missing.');
+      }
+
+      login(token, user);
+      showToast(`Welcome back, ${user.name}!`, 'success');
+
+      if (user.role === 'STUDENT') {
         navigate('/student/dashboard');
       } else {
         navigate('/admin/dashboard');
       }
     } catch (err: any) {
-      showToast(err.message || 'Login failed', 'error');
+      const msg = err.message || 'Login failed. Please verify credentials or connection.';
+      setErrorMessage(msg);
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleQuickFill = (type: 'student' | 'admin' | 'hod') => {
+  const handleQuickFill = (type: 'student' | 'student2' | 'admin' | 'hod') => {
+    setErrorMessage(null);
     if (type === 'student') {
       setActiveTab('student');
       setRollNumber('2025503598');
       setEmail('tharnikaa@student.annauniv.edu');
+      setPassword('Password123!');
+    } else if (type === 'student2') {
+      setActiveTab('student');
+      setRollNumber('STU2026004');
+      setEmail('kavya.nair@student.dormify.edu');
       setPassword('Password123!');
     } else if (type === 'admin') {
       setActiveTab('admin');
@@ -148,6 +166,27 @@ export const LoginPage: React.FC = () => {
           </button>
         </div>
 
+        {errorMessage && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '12px 14px',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #F87171',
+              borderRadius: '4px',
+              color: '#991B1B',
+              fontSize: '12px',
+              fontWeight: 600,
+              marginBottom: '20px',
+            }}
+          >
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           {activeTab === 'student' ? (
             <>
@@ -230,17 +269,20 @@ export const LoginPage: React.FC = () => {
             Quick Demo Fill:
           </div>
           {activeTab === 'student' ? (
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button className="btn btn-secondary btn-sm" onClick={() => handleQuickFill('student')}>
-                <UserCheck size={12} /> Student Demo (2025503598)
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <button className="btn btn-secondary btn-sm" type="button" onClick={() => handleQuickFill('student')}>
+                <UserCheck size={12} /> Student: Tharnikaa (2025503598)
+              </button>
+              <button className="btn btn-secondary btn-sm" type="button" onClick={() => handleQuickFill('student2')}>
+                <UserCheck size={12} /> Student: Kavya (STU2026004)
               </button>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <button className="btn btn-secondary btn-sm" onClick={() => handleQuickFill('admin')}>
+              <button className="btn btn-secondary btn-sm" type="button" onClick={() => handleQuickFill('admin')}>
                 <KeyRound size={12} /> Hostel Admin (admin@dormify.edu)
               </button>
-              <button className="btn btn-secondary btn-sm" onClick={() => handleQuickFill('hod')}>
+              <button className="btn btn-secondary btn-sm" type="button" onClick={() => handleQuickFill('hod')}>
                 <KeyRound size={12} /> HOD / Warden (hod.cs@dormify.edu)
               </button>
             </div>

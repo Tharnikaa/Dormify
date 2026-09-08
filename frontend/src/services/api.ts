@@ -1,7 +1,27 @@
 import axios from 'axios';
 
+function getApiBaseUrl(): string {
+  let envUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+
+  if (envUrl && typeof envUrl === 'string') {
+    envUrl = envUrl.trim();
+    // If Render host is passed without protocol (e.g. "dormify-backend.onrender.com/api")
+    if (!envUrl.startsWith('http://') && !envUrl.startsWith('https://') && !envUrl.startsWith('/')) {
+      envUrl = `https://${envUrl}`;
+    }
+    return envUrl.replace(/\/+$/, '');
+  }
+
+  // In production, fallback to deployed backend if VITE_API_BASE_URL was omitted during build
+  if ((import.meta as any).env?.PROD) {
+    return 'https://dormify-ymt7.onrender.com/api';
+  }
+
+  return '/api';
+}
+
 export const api = axios.create({
-  baseURL: (import.meta as any).env?.VITE_API_BASE_URL || '/api',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
