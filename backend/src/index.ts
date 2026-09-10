@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { env } from './config/env';
 import { checkDatabaseConnection } from './config/db';
 import apiRoutes from './routes';
@@ -41,23 +42,45 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static uploaded files (receipts)
 app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 
-// Root and Healthcheck endpoints
-app.get('/', (_req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'DORMIFY Backend API',
-    documentation: '/api',
-    health: '/api/health',
-    timestamp: new Date(),
-  });
-});
-
+// Healthcheck endpoint
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'DORMIFY Hostel Administration API', timestamp: new Date() });
 });
 
 // API Routes
 app.use('/api', apiRoutes);
+
+// Locate frontend build directory if present (production deployment)
+const potentialDistPaths = [
+  path.resolve(__dirname, '../../frontend/dist'),
+  path.resolve(process.cwd(), '../frontend/dist'),
+  path.resolve(process.cwd(), 'frontend/dist'),
+];
+const frontendDistPath = potentialDistPaths.find((p) => fs.existsSync(p));
+
+if (frontendDistPath) {
+  console.log(`[DORMIFY Backend] Serving frontend static files from: ${frontendDistPath}`);
+  app.use(express.static(frontendDistPath));
+
+  // SPA fallback for client-side routing (React Router)
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+} else {
+  // Fallback root endpoint when running backend independently without frontend build
+  app.get('/', (_req, res) => {
+    res.json({
+      status: 'ok',
+      service: 'DORMIFY Backend API',
+      documentation: '/api',
+      health: '/api/health',
+      timestamp: new Date(),
+    });
+  });
+}
 
 // Centralized Error Handler
 app.use(errorHandler);

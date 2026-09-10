@@ -1,12 +1,11 @@
 services:
-  # 1. Backend API Web Service
+  # Unified Fullstack Web Service (Serves both React SPA and Express REST API on 1 URL)
   - type: web
-    name: dormify-backend
+    name: dormify
     runtime: node
-    rootDir: backend
     plan: free
-    buildCommand: npm install --include=dev && npx prisma generate && npm run build
-    startCommand: npm run start
+    buildCommand: npm install --prefix frontend && npm run build --prefix frontend && npm install --prefix backend && cd backend && npx prisma generate && npm run build
+    startCommand: cd backend && npm run start
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,36 +15,7 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
-      - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: dormify-frontend
-          property: host
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
-        sync: false
-
-  # 2. Frontend React Web App (Static Site)
-  - type: web
-    name: dormify-frontend
-    runtime: static
-    rootDir: frontend
-    plan: free
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: dormify-backend
-          property: host
-          path: /api
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
         sync: false

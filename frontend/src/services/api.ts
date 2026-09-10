@@ -12,11 +12,7 @@ function getApiBaseUrl(): string {
     return envUrl.replace(/\/+$/, '');
   }
 
-  // In production, fallback to deployed backend if VITE_API_BASE_URL was omitted during build
-  if ((import.meta as any).env?.PROD) {
-    return 'https://dormify-ymt7.onrender.com/api';
-  }
-
+  // Default to relative '/api' path for same-origin production deployment and local dev proxy
   return '/api';
 }
 
