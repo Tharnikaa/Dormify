@@ -5,7 +5,7 @@ import { authenticateToken, requireRole } from '../middleware/authMiddleware';
 const router = Router();
 
 router.use(authenticateToken);
-router.use(requireRole(['ADMIN', 'HOD']));
+router.use(requireRole(['ADMIN', 'WARDEN']));
 
 router.get('/', AuditController.getLogs);
 

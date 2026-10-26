@@ -58,7 +58,7 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickFill = (type: 'student' | 'student2' | 'admin' | 'hod') => {
+  const handleQuickFill = (type: 'student' | 'student2' | 'admin' | 'warden' | 'hod') => {
     setErrorMessage(null);
     if (type === 'student') {
       setActiveTab('student');
@@ -74,9 +74,9 @@ export const LoginPage: React.FC = () => {
       setActiveTab('admin');
       setEmail('admin@dormify.edu');
       setPassword('Password123!');
-    } else if (type === 'hod') {
+    } else if (type === 'warden' || type === 'hod') {
       setActiveTab('admin');
-      setEmail('hod.cs@dormify.edu');
+      setEmail('warden@dormify.edu');
       setPassword('Password123!');
     }
   };
@@ -282,8 +282,8 @@ export const LoginPage: React.FC = () => {
               <button className="btn btn-secondary btn-sm" type="button" onClick={() => handleQuickFill('admin')}>
                 <KeyRound size={12} /> Hostel Admin (admin@dormify.edu)
               </button>
-              <button className="btn btn-secondary btn-sm" type="button" onClick={() => handleQuickFill('hod')}>
-                <KeyRound size={12} /> HOD / Warden (hod.cs@dormify.edu)
+              <button className="btn btn-secondary btn-sm" type="button" onClick={() => handleQuickFill('warden')}>
+                <KeyRound size={12} /> Chief Warden (warden@dormify.edu)
               </button>
             </div>
           )}

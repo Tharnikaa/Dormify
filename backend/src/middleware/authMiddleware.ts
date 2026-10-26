@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { ApiResponse } from '../utils/apiResponse';
 
-export type RoleType = 'STUDENT' | 'ADMIN' | 'HOD';
+export type RoleType = 'STUDENT' | 'ADMIN' | 'WARDEN' | 'HOD';
 
 export interface AuthenticatedUser {
   userId: string;
@@ -48,7 +48,10 @@ export function requireRole(allowedRoles: RoleType[]) {
       return ApiResponse.error(res, 'Unauthenticated user', 401);
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const effectiveRole: RoleType = req.user.role === 'HOD' ? 'WARDEN' : req.user.role;
+    const effectiveAllowed: RoleType[] = allowedRoles.map((r) => (r === 'HOD' ? 'WARDEN' : r));
+
+    if (!effectiveAllowed.includes(effectiveRole) && !allowedRoles.includes(req.user.role)) {
       return ApiResponse.error(res, 'Access forbidden: Insufficient permissions', 403);
     }
 

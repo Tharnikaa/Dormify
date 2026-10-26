@@ -37,8 +37,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; roles?: string[] }> 
     return <Navigate to="/login" replace />;
   }
 
-  if (roles && !roles.includes(user.role)) {
-    return <Navigate to={user.role === 'STUDENT' ? '/student/dashboard' : '/admin/dashboard'} replace />;
+  if (roles) {
+    const effectiveRole = user.role === 'HOD' ? 'WARDEN' : user.role;
+    const effectiveAllowed = roles.map((r) => (r === 'HOD' ? 'WARDEN' : r));
+    if (!effectiveAllowed.includes(effectiveRole) && !roles.includes(user.role)) {
+      return <Navigate to={user.role === 'STUDENT' ? '/student/dashboard' : '/admin/dashboard'} replace />;
+    }
   }
 
   return <>{children}</>;
@@ -72,15 +76,15 @@ export const App: React.FC = () => {
               <Route path="/student/settings" element={<ProtectedRoute roles={['STUDENT']}><StudentSettingsPage /></ProtectedRoute>} />
 
               {/* Admin Portal */}
-              <Route path="/admin/dashboard" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><AdminDashboardPage /></ProtectedRoute>} />
-              <Route path="/admin/students" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><StudentManagementPage /></ProtectedRoute>} />
-              <Route path="/admin/students/:id/change-hostel" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><ChangeHostelPage /></ProtectedRoute>} />
-              <Route path="/admin/batch-shifting" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><BatchHostelShiftingPage /></ProtectedRoute>} />
-              <Route path="/admin/fee-verification" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><FeeVerificationPage /></ProtectedRoute>} />
-              <Route path="/admin/hostel-mgmt" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><HostelManagementPage /></ProtectedRoute>} />
-              <Route path="/admin/manual-allocation" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><ManualAllocationPage /></ProtectedRoute>} />
-              <Route path="/admin/reports" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><ReportsPage /></ProtectedRoute>} />
-              <Route path="/admin/audit-logs" element={<ProtectedRoute roles={['ADMIN', 'HOD']}><AuditLogsPage /></ProtectedRoute>} />
+              <Route path="/admin/dashboard" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><AdminDashboardPage /></ProtectedRoute>} />
+              <Route path="/admin/students" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><StudentManagementPage /></ProtectedRoute>} />
+              <Route path="/admin/students/:id/change-hostel" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><ChangeHostelPage /></ProtectedRoute>} />
+              <Route path="/admin/batch-shifting" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><BatchHostelShiftingPage /></ProtectedRoute>} />
+              <Route path="/admin/fee-verification" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><FeeVerificationPage /></ProtectedRoute>} />
+              <Route path="/admin/hostel-mgmt" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><HostelManagementPage /></ProtectedRoute>} />
+              <Route path="/admin/manual-allocation" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><ManualAllocationPage /></ProtectedRoute>} />
+              <Route path="/admin/reports" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><ReportsPage /></ProtectedRoute>} />
+              <Route path="/admin/audit-logs" element={<ProtectedRoute roles={['ADMIN', 'WARDEN']}><AuditLogsPage /></ProtectedRoute>} />
             </Route>
 
             {/* Default Catch-all */}

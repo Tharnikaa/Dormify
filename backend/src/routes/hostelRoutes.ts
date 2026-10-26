@@ -10,7 +10,7 @@ router.get('/', HostelController.getHostels);
 router.get('/blocks', HostelController.getBlocks);
 router.get('/floor-plan', HostelController.getFloorPlan);
 
-router.post('/rooms', requireRole(['ADMIN', 'HOD']), HostelController.createRoom);
-router.patch('/rooms/:roomId/status', requireRole(['ADMIN', 'HOD']), HostelController.updateRoomStatus);
+router.post('/rooms', requireRole(['ADMIN', 'WARDEN']), HostelController.createRoom);
+router.patch('/rooms/:roomId/status', requireRole(['ADMIN', 'WARDEN']), HostelController.updateRoomStatus);
 
 export default router;

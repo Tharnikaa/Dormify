@@ -1,4 +1,4 @@
-export type Role = 'STUDENT' | 'ADMIN' | 'HOD';
+export type Role = 'STUDENT' | 'ADMIN' | 'WARDEN' | 'HOD';
 
 export type ApplicationStatus =
   | 'REGISTERED'

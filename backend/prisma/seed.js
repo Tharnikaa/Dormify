@@ -22,25 +22,25 @@ async function main() {
         },
     });
     console.log(`[Seed] Academic Year created: ${academicYear.name}`);
-    // 2. Create HOD User & Profile
-    const hodUser = await prisma.user.upsert({
-        where: { email: 'hod.cs@dormify.edu' },
-        update: {},
+    // 2. Create Warden User & Profile
+    const wardenUser = await prisma.user.upsert({
+        where: { email: 'warden@dormify.edu' },
+        update: { role: 'WARDEN' },
         create: {
-            email: 'hod.cs@dormify.edu',
+            email: 'warden@dormify.edu',
             passwordHash,
-            role: client_1.Role.HOD,
+            role: 'WARDEN',
             name: 'Prof. Robert Vance',
             adminProfile: {
                 create: {
-                    employeeId: 'EMP-HOD-001',
-                    department: 'Computer Science & Engineering',
-                    designation: 'Head of Department & Chief Hostel Warden',
+                    employeeId: 'EMP-WRD-001',
+                    department: 'Hostel Administration',
+                    designation: 'Chief Hostel Warden',
                 },
             },
         },
     });
-    console.log(`[Seed] HOD User created: ${hodUser.email}`);
+    console.log(`[Seed] Warden User created: ${wardenUser.email}`);
     // 3. Create Admin User & Profile
     const adminUser = await prisma.user.upsert({
         where: { email: 'admin@dormify.edu' },
@@ -418,7 +418,7 @@ async function main() {
     console.log('[Seed] Institutional seed completed successfully!');
     console.log('----------------------------------------------------');
     console.log('DEMO ACCOUNTS FOR TESTING:');
-    console.log('  HOD User:     email: hod.cs@dormify.edu / password: Password123!');
+    console.log('  Warden User:  email: warden@dormify.edu / password: Password123!');
     console.log('  Admin User:   email: admin@dormify.edu / password: Password123!');
     console.log('  Student 1:    email: alex.rivera@student.dormify.edu / password: Password123! (ALLOCATED)');
     console.log('  Student 2:    email: priya.sharma@student.dormify.edu / password: Password123! (FEE_VERIFIED)');

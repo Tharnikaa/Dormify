@@ -22,25 +22,48 @@ async function main() {
   });
   console.log(`[Seed] Academic Year created: ${academicYear.name}`);
 
-  // 2. Create HOD User & Profile
-  const hodUser = await prisma.user.upsert({
-    where: { email: 'hod.cs@dormify.edu' },
-    update: {},
+  // 2. Create Warden User & Profile
+  const wardenUser = await prisma.user.upsert({
+    where: { email: 'warden@dormify.edu' },
+    update: {
+      role: 'WARDEN',
+    },
     create: {
-      email: 'hod.cs@dormify.edu',
+      email: 'warden@dormify.edu',
       passwordHash,
-      role: 'HOD',
+      role: 'WARDEN',
       name: 'Prof. Robert Vance',
       adminProfile: {
         create: {
-          employeeId: 'EMP-HOD-001',
-          department: 'Computer Science & Engineering',
-          designation: 'Head of Department & Chief Hostel Warden',
+          employeeId: 'EMP-WRD-001',
+          department: 'Hostel Administration',
+          designation: 'Chief Hostel Warden',
         },
       },
     },
   });
-  console.log(`[Seed] HOD User created: ${hodUser.email}`);
+  console.log(`[Seed] Warden User created: ${wardenUser.email}`);
+
+  // Also support legacy hod.cs@dormify.edu updated to WARDEN
+  await prisma.user.upsert({
+    where: { email: 'hod.cs@dormify.edu' },
+    update: {
+      role: 'WARDEN',
+    },
+    create: {
+      email: 'hod.cs@dormify.edu',
+      passwordHash,
+      role: 'WARDEN',
+      name: 'Prof. Robert Vance',
+      adminProfile: {
+        create: {
+          employeeId: 'EMP-HOD-001',
+          department: 'Hostel Administration',
+          designation: 'Chief Hostel Warden',
+        },
+      },
+    },
+  });
 
   // 3. Create Admin User & Profile (Mr. Ajith - Hostel Office Admin)
   const adminUser = await prisma.user.upsert({

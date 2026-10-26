@@ -10,11 +10,11 @@ router.get('/me/profile', requireRole(['STUDENT']), StudentController.getProfile
 router.put('/me/profile', requireRole(['STUDENT']), StudentController.updateProfile);
 router.get('/me/application', requireRole(['STUDENT']), StudentController.getCurrentApplication);
 
-// Admin / HOD access
-router.get('/', requireRole(['ADMIN', 'HOD']), StudentController.listStudents);
-router.post('/batch-shift', requireRole(['ADMIN', 'HOD']), StudentController.adminBatchShiftHostels);
-router.get('/:id', requireRole(['ADMIN', 'HOD']), StudentController.getProfile);
-router.get('/:id/details', requireRole(['ADMIN', 'HOD']), StudentController.getStudentById);
-router.put('/:id/change-hostel', requireRole(['ADMIN', 'HOD']), StudentController.adminChangeHostel);
+// Admin / Warden access
+router.get('/', requireRole(['ADMIN', 'WARDEN']), StudentController.listStudents);
+router.post('/batch-shift', requireRole(['ADMIN', 'WARDEN']), StudentController.adminBatchShiftHostels);
+router.get('/:id', requireRole(['ADMIN', 'WARDEN']), StudentController.getProfile);
+router.get('/:id/details', requireRole(['ADMIN', 'WARDEN']), StudentController.getStudentById);
+router.put('/:id/change-hostel', requireRole(['ADMIN', 'WARDEN']), StudentController.adminChangeHostel);
 
 export default router;

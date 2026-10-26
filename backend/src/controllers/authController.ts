@@ -132,10 +132,16 @@ export class AuthController {
           return ApiResponse.error(res, 'Roll number or Email address is required.', 400);
         }
 
+        const searchKey = loginKey.toLowerCase();
+        const emailConditions: any[] = [{ email: searchKey }];
+        if (searchKey === 'warden@dormify.edu' || searchKey === 'hod.cs@dormify.edu') {
+          emailConditions.push({ email: 'warden@dormify.edu' }, { email: 'hod.cs@dormify.edu' });
+        }
+
         user = await prisma.user.findFirst({
           where: {
             OR: [
-              { email: loginKey.toLowerCase() },
+              ...emailConditions,
               { studentProfile: { rollNumber: loginKey } },
             ],
           },
@@ -155,11 +161,13 @@ export class AuthController {
         return ApiResponse.error(res, 'Invalid password credentials.', 401);
       }
 
+      const effectiveRole = user.role === 'HOD' ? 'WARDEN' : user.role;
+
       const token = jwt.sign(
         {
           userId: user.id,
           email: user.email,
-          role: user.role,
+          role: effectiveRole,
           studentId: user.studentProfile?.id,
           adminId: user.adminProfile?.id,
         },
@@ -167,7 +175,7 @@ export class AuthController {
         { expiresIn: '7d' }
       );
 
-      await logAudit(user.id, 'LOGIN', 'User', `User ${user.name} logged in (${user.role}).`, user.id);
+      await logAudit(user.id, 'LOGIN', 'User', `User ${user.name} logged in (${effectiveRole}).`, user.id);
 
       return ApiResponse.success(res, {
         token,
@@ -175,7 +183,7 @@ export class AuthController {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
+          role: effectiveRole,
           studentProfile: user.studentProfile,
           adminProfile: user.adminProfile,
         },
@@ -204,11 +212,13 @@ export class AuthController {
         return ApiResponse.error(res, 'User not found', 404);
       }
 
+      const effectiveRole = user.role === 'HOD' ? 'WARDEN' : user.role;
+
       return ApiResponse.success(res, {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role,
+        role: effectiveRole,
         studentProfile: user.studentProfile,
         adminProfile: user.adminProfile,
       });

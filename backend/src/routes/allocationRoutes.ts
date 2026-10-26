@@ -15,7 +15,7 @@ router.get('/:id/letter-html', (req: Request, res: Response, next: NextFunction)
 router.use(authenticateToken);
 
 router.post('/select-bed', requireRole(['STUDENT']), AllocationController.selectBed);
-router.post('/manual', requireRole(['ADMIN', 'HOD']), AllocationController.manualAllocate);
+router.post('/manual', requireRole(['ADMIN', 'WARDEN']), AllocationController.manualAllocate);
 router.get('/my-allocation', requireRole(['STUDENT']), AllocationController.getMyAllocation);
 
 export default router;
