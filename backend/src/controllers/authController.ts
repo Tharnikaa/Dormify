@@ -111,10 +111,14 @@ export class AuthController {
 
       // If both rollNumber and email are provided (Student 3-field login)
       if (rollNumber && email) {
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanRoll = rollNumber.trim();
+
+        // 1. Try matching both roll number and email (case-insensitive)
         user = await prisma.user.findFirst({
           where: {
-            email: email.trim().toLowerCase(),
-            studentProfile: { rollNumber: rollNumber.trim() },
+            email: { equals: cleanEmail, mode: 'insensitive' },
+            studentProfile: { rollNumber: { equals: cleanRoll, mode: 'insensitive' } },
           },
           include: {
             studentProfile: true,
@@ -122,8 +126,24 @@ export class AuthController {
           },
         });
 
+        // 2. If not matched together, fallback to matching either roll number or email
         if (!user) {
-          return ApiResponse.error(res, 'Invalid Roll Number or Student Email combination.', 401);
+          user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { studentProfile: { rollNumber: { equals: cleanRoll, mode: 'insensitive' } } },
+                { email: { equals: cleanEmail, mode: 'insensitive' } },
+              ],
+            },
+            include: {
+              studentProfile: true,
+              adminProfile: true,
+            },
+          });
+        }
+
+        if (!user) {
+          return ApiResponse.error(res, 'Invalid Roll Number or Student Email credentials.', 401);
         }
       } else {
         const loginKey = (identifier || email || rollNumber || '').trim();
@@ -133,16 +153,21 @@ export class AuthController {
         }
 
         const searchKey = loginKey.toLowerCase();
-        const emailConditions: any[] = [{ email: searchKey }];
+        const emailConditions: any[] = [
+          { email: { equals: searchKey, mode: 'insensitive' } },
+        ];
         if (searchKey === 'warden@dormify.edu' || searchKey === 'hod.cs@dormify.edu') {
-          emailConditions.push({ email: 'warden@dormify.edu' }, { email: 'hod.cs@dormify.edu' });
+          emailConditions.push(
+            { email: { equals: 'warden@dormify.edu', mode: 'insensitive' } },
+            { email: { equals: 'hod.cs@dormify.edu', mode: 'insensitive' } }
+          );
         }
 
         user = await prisma.user.findFirst({
           where: {
             OR: [
               ...emailConditions,
-              { studentProfile: { rollNumber: loginKey } },
+              { studentProfile: { rollNumber: { equals: loginKey, mode: 'insensitive' } } },
             ],
           },
           include: {
@@ -188,9 +213,29 @@ export class AuthController {
           adminProfile: user.adminProfile,
         },
       }, 'Login successful');
-    } catch (err) {
+    } catch (err: any) {
       console.error('[AuthController.login] Error:', err);
-      return ApiResponse.error(res, 'Login failed', 500, err);
+      const errStr = String(err?.message || '') + ' ' + String(err?.code || '');
+      const isDbError =
+        errStr.includes("Can't reach database server") ||
+        errStr.includes('connection') ||
+        errStr.includes('ETIMEDOUT') ||
+        errStr.includes('ECONNREFUSED') ||
+        err?.code === 'P1001' ||
+        err?.code === 'P1002' ||
+        err?.code === 'P1003' ||
+        err?.code === 'P1017';
+
+      if (isDbError) {
+        return ApiResponse.error(
+          res,
+          'Database unreachable: The Supabase PostgreSQL database is currently paused or inactive. Please visit your Supabase dashboard (project: lqyisyqrnmfwqwkycfol) and click "Restore project" to reactivate the database.',
+          503,
+          err
+        );
+      }
+
+      return ApiResponse.error(res, err?.message || 'Login failed', 500, err);
     }
   }
 

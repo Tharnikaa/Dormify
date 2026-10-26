@@ -352,6 +352,64 @@ async function main() {
 
   // 5. Seed Students with different lifecycle stages
 
+  // Primary Student: Tharnikaa Balakrishnan (1st Year CS - MIT Hostels)
+  const tharnikaaUser = await prisma.user.upsert({
+    where: { email: 'tharnikaa@student.annauniv.edu' },
+    update: {},
+    create: {
+      email: 'tharnikaa@student.annauniv.edu',
+      passwordHash,
+      role: 'STUDENT',
+      name: 'Tharnikaa Balakrishnan',
+      studentProfile: {
+        create: {
+          rollNumber: '2025503598',
+          department: 'Computer Science & Engineering',
+          yearOfStudy: 1,
+          preferredHostel: 'RAJAM_NRI',
+          totalFeePaid: 107084.0,
+          remainingFeeDue: 0,
+          quota: 'TNEA',
+          phone: '+91 94441 55667',
+          guardianName: 'Balakrishnan',
+          guardianPhone: '+91 94441 88990',
+          gender: 'FEMALE',
+          address: 'Anna University Campus, MIT Chromepet',
+        },
+      },
+    },
+    include: { studentProfile: true },
+  });
+
+  if (tharnikaaUser.studentProfile) {
+    const appThar = await prisma.application.upsert({
+      where: { studentId_academicYearId: { studentId: tharnikaaUser.studentProfile.id, academicYearId: academicYear.id } },
+      update: {},
+      create: {
+        studentId: tharnikaaUser.studentProfile.id,
+        academicYearId: academicYear.id,
+        status: 'FEE_VERIFIED',
+      },
+    });
+
+    await prisma.feeReceipt.upsert({
+      where: { applicationId: appThar.id },
+      update: {},
+      create: {
+        applicationId: appThar.id,
+        receiptNumber: 'REC-2025-503598',
+        amount: 107084.0,
+        fileUrl: '/uploads/receipts/sample_receipt_2.pdf',
+        originalFilename: 'Tharnikaa_Hostel_Fee_Receipt.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 215000,
+        status: 'APPROVED',
+        verificationDate: new Date(),
+        reviewerAdminId: adminUser.id,
+      },
+    });
+  }
+
   // Student 1: Fully Allocated (Alex Rivera - 2nd Year CS, Orchid International)
   const user1 = await prisma.user.upsert({
     where: { email: 'alex.rivera@student.dormify.edu' },

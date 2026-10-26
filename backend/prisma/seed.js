@@ -185,6 +185,42 @@ async function main() {
     }
     console.log('[Seed] Hostel structure created with Blocks, Floors, Rooms, and Beds.');
     // 5. Seed Students with different lifecycle stages
+    // Primary Student: Tharnikaa Balakrishnan
+    const tharnikaaUser = await prisma.user.upsert({
+        where: { email: 'tharnikaa@student.annauniv.edu' },
+        update: {},
+        create: {
+            email: 'tharnikaa@student.annauniv.edu',
+            passwordHash,
+            role: client_1.Role.STUDENT,
+            name: 'Tharnikaa Balakrishnan',
+            studentProfile: {
+                create: {
+                    rollNumber: '2025503598',
+                    department: 'Computer Science & Engineering',
+                    hostelType: 'REGULAR_NON_AC',
+                    phone: '+91 94441 55667',
+                    guardianName: 'Balakrishnan',
+                    guardianPhone: '+91 94441 88990',
+                    gender: 'FEMALE',
+                    address: 'Anna University Campus, MIT Chromepet',
+                },
+            },
+        },
+        include: { studentProfile: true },
+    });
+    if (tharnikaaUser.studentProfile) {
+        await prisma.application.upsert({
+            where: { studentId_academicYearId: { studentId: tharnikaaUser.studentProfile.id, academicYearId: academicYear.id } },
+            update: {},
+            create: {
+                studentId: tharnikaaUser.studentProfile.id,
+                academicYearId: academicYear.id,
+                status: client_1.ApplicationStatus.FEE_VERIFIED,
+            },
+        });
+    }
+
     // Student 1: Fully Allocated (Alex Rivera)
     const user1 = await prisma.user.upsert({
         where: { email: 'alex.rivera@student.dormify.edu' },
